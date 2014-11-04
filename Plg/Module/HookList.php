@@ -107,7 +107,6 @@ CSS;
       "ttek/installers": "~1.0"
     }
 }
-
 XML;
         $template->insertText('info', $info);
     }
@@ -189,8 +188,8 @@ class Plugin extends \Plg\Iface
     public function init()
     {
         // First register Pages for this plugin
-        \$dispatcher = \$this->getConfig()->getDispatcherStatic();
-        \$dispatcher->overwrite()->add(\$this->getConfigUrl()->getPath(true), '\example\Module\Config');
+        \$dispatcher = \$this-&gt;getConfig()-&gt;getDispatcherStatic();
+        \$dispatcher-&gt;overwrite()-&gt;add(\$this->getConfigUrl()-&gt;getPath(true), '\example\Module\Config');
     }
 
     /**
@@ -268,9 +267,7 @@ class Plugin extends \Plg\Iface
         </div>
         <div class="widget-content">
 
-<pre var="info">
-
-</pre>
+<pre var="info"></pre>
 
         </div>
       </div>

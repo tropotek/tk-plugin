@@ -196,7 +196,7 @@ JS;
     public function __makeTemplate()
     {
         $xmlStr = <<<HTML
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <div class="row">
   <div class="col-md-8 col-sm-12">
     <div class="panel panel-default">
