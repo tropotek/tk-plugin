@@ -204,7 +204,6 @@ class Factory extends \Tk\Object
         $sql = <<<SQL
 SELECT * FROM `plugin` WHERE `name` = $pluginName
 SQL;
-        vd($sql);
         $res = $db->query($sql);
         if ($res->rowCount() > 0) {
             return true;
