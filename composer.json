@@ -2,30 +2,27 @@
     "name": "ttek/tk-plugin",
     "type": "library",
     "description": "Manage and add plugin functionality to a site",
-    "keywords":  [
-        "tropotek",
-        "Plg"
-    ],
-    "time": "2014-12-03",
+    "keywords": ["tropotek", "Plg"],
+    "time":  "2010-12-09",
     "license": "MIT",
-    "version": "1.2.3",
-    "authors":  [
-         {
+    "version": "trunk",
+    "authors": [
+        {
             "name": "Michael Mifsud",
             "email": "info@tropotek.com.au",
             "homepage": "http://www.tropotek.com/"
         }
     ],
-    "autoload":  {
-        "psr-0":  {
+    "autoload": {
+        "psr-0": {
             "Plg\\": ""
         }
     },
-    "require":  {
+    "require": {
         "php": ">=5.3.3"
     },
-    "extra":  {
-        "branch-alias":  {
+    "extra": {
+        "branch-alias": {
             "dev-master": "1.2.x-dev"
         }
     }
