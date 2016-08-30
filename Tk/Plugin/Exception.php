@@ -1,5 +1,5 @@
 <?php
-namespace Plg;
+namespace Tk\Plugin;
 
 /**
  * Class Exception

@@ -7,7 +7,7 @@
 CREATE TABLE IF NOT EXISTS `plugin` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(128) NOT NULL,
-  `version` VARCHAR(9) NOT NULL,
+  `version` VARCHAR(16) NOT NULL,
   `created` TIMESTAMP NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY (`name`)
