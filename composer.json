@@ -18,7 +18,7 @@
             "Plg\\": ""
         },
         "files":  [
-            "src/App/Bootstrap.php"
+            "Bootstrap.php"
         ]
     },
     "require": {
