@@ -11,7 +11,6 @@ namespace Tk\Plugin;
 abstract class Iface
 {
 
-
     /**
      * @var bool
      */
@@ -32,7 +31,6 @@ abstract class Iface
      */
     abstract function init();
 
-
     /**
      * This is the path to the page that the administrator
      * can configure/manage the plugin.
@@ -40,7 +38,6 @@ abstract class Iface
      * @return \Tk\Url
      */
     abstract function getConfigUrl();
-
 
     /**
      * Activate the plugin, essentially
@@ -58,10 +55,6 @@ abstract class Iface
      *
      */
     abstract function deactivate();
-
-
-
-
 
 
     /**
