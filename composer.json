@@ -16,7 +16,10 @@
     "autoload": {
         "psr-0": {
             "Plg\\": ""
-        }
+        },
+        "files":  [
+            "src/App/Bootstrap.php"
+        ]
     },
     "require": {
         "php": ">=5.3.3"
