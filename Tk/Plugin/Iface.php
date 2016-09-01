@@ -19,8 +19,31 @@ abstract class Iface
     /**
      * @var \stdClass
      */
+    private $name = null;
+
+    /**
+     * @var \stdClass
+     */
     private $info = null;
 
+    /**
+     * @var \Tk\Config
+     */
+    private $config = null;
+    
+    
+
+    /**
+     * Iface constructor.
+     * @param string $name
+     * @param \Tk\Config $config
+     */
+    public function __construct($name, $config = null)
+    {
+        $this->name = $name;
+        if (!$config) $config = \Tk\Config::getInstance();
+        $this->config = $config;
+    }
 
 
     /**
@@ -57,12 +80,7 @@ abstract class Iface
      */
     public function getPluginName()
     {
-        // TODO: There  should be a faster way basename(dirname(__FILE__))
-        return basename(dirname(__FILE__));
-//        $ns = get_class($this);
-//        $a = explode('\\', $ns);
-//        array_pop($a);
-//        return array_shift($a);
+        return $this->name;
     }
 
     /**
@@ -87,14 +105,6 @@ abstract class Iface
     }
 
     /**
-     * @return Factory
-     */
-    public function getPluginFactory()
-    {
-        return \Tk\Plugin\Factory::getInstance();
-    }
-
-    /**
      * Get Plugin Meta Data
      *
      * @return \stdClass
@@ -102,9 +112,25 @@ abstract class Iface
     public function getInfo()
     {
         if (!$this->info) {
-            $this->getPluginFactory()->getPluginInfo($this->getPluginName());
+            $this->info = $this->getPluginFactory()->getPluginInfo($this->getPluginName());
         }
         return $this->info;
+    }
+
+    /**
+     * @return \Tk\Config
+     */
+    public function getConfig()
+    {
+        return $this->config;
+    }
+
+    /**
+     * @return Factory
+     */
+    public function getPluginFactory()
+    {
+        return \Tk\Plugin\Factory::getInstance();
     }
 
 

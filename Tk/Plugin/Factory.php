@@ -105,19 +105,31 @@ class Factory
         $this->activePlugins = array();
         foreach ($available as $pluginName) {
             if ($this->isActive($pluginName)) {
-                $class = $this->makePluginClassname($pluginName);
-                if (!class_exists($class))
-                    include_once $this->makePluginPath($pluginName).'/Plugin.php';
-                /** @var Iface $plugin */
-                $plugin = new $class();
-                if (!$plugin instanceof Iface) {
-                    throw new Exception('Plugin class uses the incorrect interface: ' . $class);
-                }
+                $plugin = $this->makePluginInstance($pluginName);
                 $plugin->doInit();
                 $this->activePlugins[$pluginName] = $plugin;
             }
         }
         return $this->activePlugins;
+    }
+
+    /**
+     * @param $pluginName
+     * @return Iface
+     * @throws Exception
+     */
+    protected function makePluginInstance($pluginName)
+    {
+        $class = $this->makePluginClassname($pluginName);
+        if (!class_exists($class))
+            include_once $this->makePluginPath($pluginName).'/Plugin.php';
+        
+        /** @var Iface $plugin */
+        $plugin = new $class($pluginName, $this->config);
+        if (!$plugin instanceof Iface) {
+            throw new Exception('Plugin class uses the incorrect interface: ' . $class);
+        }
+        return $plugin;
     }
 
     /**
@@ -148,7 +160,13 @@ class Factory
      */
     public function makePluginClassname($pluginName)
     {
-        return '\\'.$pluginName.'\\Plugin';
+        // this may need to be made into a callback per plugin for custom configs?
+        if (!empty($this->getPluginInfo($pluginName)->autoload->{'psr-0'})) {
+            $ns = current(array_keys(get_object_vars($this->getPluginInfo($pluginName)->autoload->{'psr-0'})));
+            $class = '\\' . $ns . 'Plugin';
+            if (class_exists($class)) return $class;
+        }
+        return '\\' . $pluginName.'\\Plugin';
     }
 
     /**
@@ -207,12 +225,8 @@ class Factory
         if ($this->isActive($pluginName))
             throw new Exception ('Cannot activate and active plugin.');
 
-        $class = $this->makePluginClassname($pluginName);
-        if (!class_exists($class))
-            include_once $this->makePluginPath($pluginName).'/Plugin.php';
-
-        /** @var Iface $plugin */
-        $plugin = new $class();
+        $plugin = $this->makePluginInstance($pluginName);
+        
         $plugin->doActivate();
 
         $pluginName = preg_replace('/[^a-zA-Z0-9_-]/', '', $pluginName);
@@ -246,5 +260,11 @@ class Factory
         unset($this->activePlugins[$pluginName]);
     }
 
-
+    /**
+     * @return \Tk\Config
+     */
+    public function getConfig()
+    {
+        return $this->config;
+    }
 }
