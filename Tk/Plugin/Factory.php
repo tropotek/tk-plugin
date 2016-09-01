@@ -9,6 +9,10 @@ namespace Tk\Plugin;
  */
 class Factory
 {
+
+    /**
+     * @var string
+     */
     static $dbTable = 'plugin';
 
     /**
@@ -32,11 +36,6 @@ class Factory
      */
     protected $db = null;
 
-    /**
-     * @var \Psr\Log\LoggerInterface
-     */
-    protected $logger = null;
-
 
     /**
      * constructor
@@ -47,13 +46,9 @@ class Factory
     {
         $this->config = $config;
         $this->db = $config->getDb();
-        $this->logger = new \Psr\Log\NullLogger();
-        if ($config->getLog())
-            $this->logger = $config->getLog();
 
         $this->installPluginTable();
         $this->initActivePlugins();
-
     }
 
     /**
@@ -73,6 +68,20 @@ class Factory
     }
 
     /**
+     * Get Plugin instance
+     * Can only be called if the plugin is active
+     * Returns null otherwise...
+     *
+     * @param $pluginName
+     * @return Iface|null
+     */
+    public function getPlugin($pluginName)
+    {
+        if (isset($this->activePlugins[$pluginName]))
+            return $this->activePlugins[$pluginName];
+    }
+
+    /**
      * Install the plugin tables
      */
     protected function installPluginTable()
@@ -85,7 +94,6 @@ class Factory
         $migrate->migrate($this->config->getVendorPath() . '/ttek/tk-plugin/sql');
     }
 
-
     /**
      * Registration adds the plugin to the list of plugins, and also
      * includes it's code into our runtime.
@@ -93,25 +101,23 @@ class Factory
      */
     protected function initActivePlugins()
     {
-        $available = $this->getFolderList($this->config->getPluginPath());
-
-        $active = array();
-//        foreach ($available as $pluginName) {
-//            if ($this->isActive($pluginName)) {
-//                $class = $this->makePluginClassname($pluginName);
-//                $plug = new $class();
-//                if (!$plug instanceof Iface) {
-//                    throw new Exception('Plugin class not an instance of \Plg\Iface: ' . $class);
-//                }
-//                if (method_exists($plug, 'init')) {
-//                    $plug->getInfo();
-//                    $plug->init();
-//                    $this->logger->debug('Plugin Init: ' . $plug->getClassName());
-//                }
-//                $active[$pluginName] = $plug;
-//            }
-//        }
-        return $active;
+        $available = $this->getAvailablePlugins();
+        $this->activePlugins = array();
+        foreach ($available as $pluginName) {
+            if ($this->isActive($pluginName)) {
+                $class = $this->makePluginClassname($pluginName);
+                if (!class_exists($class))
+                    include_once $this->makePluginPath($pluginName).'/Plugin.php';
+                /** @var Iface $plugin */
+                $plugin = new $class();
+                if (!$plugin instanceof Iface) {
+                    throw new Exception('Plugin class uses the incorrect interface: ' . $class);
+                }
+                $plugin->doInit();
+                $this->activePlugins[$pluginName] = $plugin;
+            }
+        }
+        return $this->activePlugins;
     }
 
     /**
@@ -119,8 +125,9 @@ class Factory
      *
      * @return array
      */
-    public function getFolderList($path)
+    public function getAvailablePlugins()
     {
+        $path = $this->config->getPluginPath();
         $fileList = array();
         if (is_dir($path)) {
             $fileList = scandir($path);
@@ -133,20 +140,111 @@ class Factory
         return array_merge($fileList);
     }
 
+    /**
+     * The plugin main executible classname is made using this function
+     *
+     * @param string $pluginName
+     * @return string
+     */
+    public function makePluginClassname($pluginName)
+    {
+        return '\\'.$pluginName.'\\Plugin';
+    }
 
+    /**
+     * Get the main path for the plugin
+     *
+     * @param $pluginName
+     * @return string
+     */
+    public function makePluginPath($pluginName)
+    {
+        return $this->config->getPluginPath() . '/' . $pluginName;
+    }
 
+    /**
+     * Get Plugin Meta Data
+     *
+     * @param $pluginName
+     * @return \stdClass
+     */
+    public function getPluginInfo($pluginName)
+    {
+        $file = $this->config->getPluginPath().'/'.$pluginName.'/composer.json';
+        if (is_readable($file))
+            return json_decode(file_get_contents($file));
+        $info = new \stdClass();
+        $info->name = 'ttek-plg/' . $pluginName;
+        $info->version = '0.0.1';
+        return $info;
+    }
 
+    /**
+     *
+     * @param string $pluginName
+     * @return bool
+     */
+    public function isActive($pluginName)
+    {
+        $pluginName = preg_replace('/[^a-zA-Z0-9_-]/', '', $pluginName);
+        $sql = sprintf('SELECT * FROM plugin WHERE name = %s', $this->db->quote($pluginName));
+        $res = $this->db->query($sql);
+        if ($res->rowCount() > 0) {
+            return true;
+        }
+        return false;
+    }
 
+    /**
+     * Activate and install the plugin
+     * Calling the plugin activate method
+     *
+     * @param string $pluginName
+     * @throws Exception
+     */
+    public function activatePlugin($pluginName)
+    {
+        if ($this->isActive($pluginName))
+            throw new Exception ('Cannot activate and active plugin.');
 
+        $class = $this->makePluginClassname($pluginName);
+        if (!class_exists($class))
+            include_once $this->makePluginPath($pluginName).'/Plugin.php';
 
+        /** @var Iface $plugin */
+        $plugin = new $class();
+        $plugin->doActivate();
 
+        $pluginName = preg_replace('/[^a-zA-Z0-9_-]/', '', $pluginName);
+        $version = $this->getPluginInfo($pluginName)->version;
+        if (!$version) $version = '0.0.0';
 
+        $sql = sprintf('INSERT INTO plugin VALUES (NULL, %s, %s, NOW())', $this->db->quote($pluginName), $this->db->quote($version));
+        $this->db->query($sql);
+        $this->activePlugins[$pluginName] = $plugin;
+    }
 
+    /**
+     * deactivate the plugin calling the deactivate method
+     *
+     * @param string $pluginName
+     * @throws Exception
+     */
+    public function deactivatePlugin($pluginName)
+    {
+        if (!$this->isActive($pluginName))
+            throw new Exception ('Plugin currently inactive.');
 
+        /** @var Iface $plugin */
+        $plugin = $this->activePlugins[$pluginName];
+        if (!$plugin) return;
+        $plugin->doDeactivate();
 
-
-
-
+        $pluginName = preg_replace('/[^a-zA-Z0-9_-]/', '', $pluginName);
+        $sql = sprintf('DELETE FROM plugin WHERE name = %s', $this->db->quote($pluginName));
+        $this->db->query($sql);
+        unset($this->activePlugins[$pluginName]);
+    }
 
 
 }

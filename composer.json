@@ -2,7 +2,7 @@
     "name": "ttek/tk-plugin",
     "type": "library",
     "description": "Manage and add plugin functionality to a site",
-    "keywords": ["tropotek", "Plg"],
+    "keywords": ["tropotek", "plugin"],
     "time":  "2010-12-09",
     "license": "MIT",
     "version": "trunk",

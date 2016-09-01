@@ -29,15 +29,7 @@ abstract class Iface
      * So it is the first called method after the constructor.....
      *
      */
-    abstract function init();
-
-    /**
-     * This is the path to the page that the administrator
-     * can configure/manage the plugin.
-     *
-     * @return \Tk\Url
-     */
-    abstract function getConfigUrl();
+    abstract function doInit();
 
     /**
      * Activate the plugin, essentially
@@ -46,7 +38,7 @@ abstract class Iface
      * plugin control panel
      *
      */
-    abstract function activate();
+    abstract function doActivate();
 
     /**
      * Deactivate the plugin removing any DB data and settings
@@ -54,8 +46,24 @@ abstract class Iface
      * plugin control panel
      *
      */
-    abstract function deactivate();
+    abstract function doDeactivate();
 
+
+
+    /**
+     * Get the plugin name
+     *
+     * @return string
+     */
+    public function getPluginName()
+    {
+        // TODO: There  should be a faster way basename(dirname(__FILE__))
+        return basename(dirname(__FILE__));
+//        $ns = get_class($this);
+//        $a = explode('\\', $ns);
+//        array_pop($a);
+//        return array_shift($a);
+    }
 
     /**
      * Set the plugin enabled status
@@ -78,6 +86,13 @@ abstract class Iface
         return $this->enable;
     }
 
+    /**
+     * @return Factory
+     */
+    public function getPluginFactory()
+    {
+        return \Tk\Plugin\Factory::getInstance();
+    }
 
     /**
      * Get Plugin Meta Data
@@ -87,9 +102,7 @@ abstract class Iface
     public function getInfo()
     {
         if (!$this->info) {
-            // TODO: Get the plugin path
-//            $file = dirname($this->getClassPath()) . '/composer.json';
-//            $this->info = json_decode(file_get_contents($file));
+            $this->getPluginFactory()->getPluginInfo($this->getPluginName());
         }
         return $this->info;
     }
