@@ -104,11 +104,11 @@ class Factory
         $available = $this->getAvailablePlugins();
         $this->activePlugins = array();
         foreach ($available as $pluginName) {
-            if ($this->isActive($pluginName)) {
-                $plugin = $this->makePluginInstance($pluginName);
-                $plugin->doInit();
-                $this->activePlugins[$pluginName] = $plugin;
-            }
+            if (!$this->isActive($pluginName)) continue;
+            $plugin = $this->makePluginInstance($pluginName);
+            $plugin->doInit();
+            $this->activePlugins[$pluginName] = $plugin;
+            
         }
         return $this->activePlugins;
     }
@@ -120,12 +120,17 @@ class Factory
      */
     protected function makePluginInstance($pluginName)
     {
+        if (!$this->isActive($pluginName)) {
+            throw new Exception('Cannot instantiate an inactive plugin: ' . $pluginName);
+        }
         $class = $this->makePluginClassname($pluginName);
         if (!class_exists($class))
             include_once $this->makePluginPath($pluginName).'/Plugin.php';
         
+        $data = $this->getDbPlugin($pluginName);
+        
         /** @var Iface $plugin */
-        $plugin = new $class($pluginName, $this->config);
+        $plugin = new $class($data->id, $pluginName, $this->config);
         if (!$plugin instanceof Iface) {
             throw new Exception('Plugin class uses the incorrect interface: ' . $class);
         }
@@ -214,6 +219,19 @@ class Factory
     }
 
     /**
+     *
+     * @param string $pluginName
+     * @return bool
+     */
+    public function getDbPlugin($pluginName)
+    {
+        $pluginName = preg_replace('/[^a-zA-Z0-9_-]/', '', $pluginName);
+        $sql = sprintf('SELECT * FROM plugin WHERE name = %s', $this->db->quote($pluginName));
+        $res = $this->db->query($sql);
+        return $res->fetch();
+    }
+
+    /**
      * Activate and install the plugin
      * Calling the plugin activate method
      *
@@ -223,18 +241,18 @@ class Factory
     public function activatePlugin($pluginName)
     {
         if ($this->isActive($pluginName))
-            throw new Exception ('Cannot activate and active plugin.');
-
-        $plugin = $this->makePluginInstance($pluginName);
-        
-        $plugin->doActivate();
+            throw new Exception ('Plugin currently active.');
 
         $pluginName = preg_replace('/[^a-zA-Z0-9_-]/', '', $pluginName);
         $version = $this->getPluginInfo($pluginName)->version;
         if (!$version) $version = '0.0.0';
-
+        
+        // Activate plugin by database entry
         $sql = sprintf('INSERT INTO plugin VALUES (NULL, %s, %s, NOW())', $this->db->quote($pluginName), $this->db->quote($version));
         $this->db->query($sql);
+        
+        $plugin = $this->makePluginInstance($pluginName);
+        $plugin->doActivate();
         $this->activePlugins[$pluginName] = $plugin;
     }
 

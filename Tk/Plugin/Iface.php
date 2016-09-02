@@ -12,15 +12,15 @@ abstract class Iface
 {
 
     /**
-     * @var bool
+     * @var int
      */
-    private $enable = true;
+    protected $id = null;
 
     /**
-     * @var \stdClass
+     * @var string
      */
-    private $name = null;
-
+    protected $name = null;
+    
     /**
      * @var \stdClass
      */
@@ -38,8 +38,9 @@ abstract class Iface
      * @param string $name
      * @param \Tk\Config $config
      */
-    public function __construct($name, $config = null)
+    public function __construct($id, $name, $config = null)
     {
+        $this->id = $id;
         $this->name = $name;
         if (!$config) $config = \Tk\Config::getInstance();
         $this->config = $config;
@@ -71,37 +72,24 @@ abstract class Iface
      */
     abstract function doDeactivate();
 
-
+    /**
+     * The plugin ID from the DB of active plugins
+     * 
+     * @return int
+     */
+    public function getPluginId()
+    {
+        return $this->id;
+    }
 
     /**
-     * Get the plugin name
+     * Get the plugin/package name. Same name as stored in teh DB of active plugins
      *
      * @return string
      */
     public function getPluginName()
     {
         return $this->name;
-    }
-
-    /**
-     * Set the plugin enabled status
-     *
-     * @param bool $b
-     * @return $this
-     */
-    public function setEnable($b = true)
-    {
-        $this->enable = $b;
-        return $this;
-    }
-
-    /**
-     * Is the plugin enabled.
-     * @return bool
-     */
-    public function isEnabled()
-    {
-        return $this->enable;
     }
 
     /**
