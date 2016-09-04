@@ -1,5 +1,17 @@
 #CHANGELOG#
 
+Ver 2.0.0 [2016-09-05]:
+-------------------------------
+ - Tidy up of new plugin system
+ - Updated Plugin system
+ - Cleaned config
+ - Fixed the event list manager
+ - Fixed table array handling
+ - Added Html Cell rendderer for the Table lib
+ - Adde new event dispatcher event parsing so we can see what events are available throughout the
+   system getAvailableEvents()
+
+
 Ver 1.2.0 [2014-11-17]:
 ----------------
  - Finished updates
