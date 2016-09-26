@@ -13,7 +13,7 @@ class Factory
     /**
      * @var string
      */
-    static $DB_TABLE = 'sys_plugin';
+    static $DB_TABLE = 'plugin';
 
     /**
      * @var Factory
