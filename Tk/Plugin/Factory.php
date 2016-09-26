@@ -13,7 +13,7 @@ class Factory
     /**
      * @var string
      */
-    static $dbTable = 'plugin';
+    static $DB_TABLE = 'sys_plugin';
 
     /**
      * @var Factory
@@ -45,9 +45,7 @@ class Factory
     protected function __construct($config)
     {
         $this->config = $config;
-        $this->db = $config->getDb();
-
-        $this->installPluginTable();
+        $this->setDb($config->getDb());
         $this->initActivePlugins();
     }
 
@@ -84,14 +82,58 @@ class Factory
     /**
      * Install the plugin tables
      */
-    protected function installPluginTable()
+    protected function install()
     {
-        if($this->db->tableExists(self::$dbTable)) {
+        if($this->db->tableExists(self::$DB_TABLE)) {
             return;
         }
-        $migrate = new \Tk\Util\SqlMigrate($this->db);
-        $migrate->setTempPath($this->config->getTempPath());
-        $migrate->migrate($this->config->getVendorPath() . '/ttek/tk-plugin/sql');
+//        $migrate = new \Tk\Util\SqlMigrate($this->db);
+//        $migrate->setTempPath($this->config->getTempPath());
+//        $migrate->migrate($this->config->getVendorPath() . '/ttek/tk-plugin/sql');
+
+        if ($this->getDb()->tableExists($this->getTable())) return;
+        $tbl = $this->getDb()->quoteParameter($this->getTable());
+        // mysql
+        $sql = '';
+        if ($this->getDb()->getDriver() == 'mysql') {
+            $sql = <<<SQL
+CREATE TABLE IF NOT EXISTS $tbl (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(128) NOT NULL,
+  `version` VARCHAR(16) NOT NULL,
+  `created` TIMESTAMP NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY (`name`)
+) ENGINE=InnoDB;
+SQL;
+        } else if ($this->getDb()->getDriver() == 'pgsql') {
+            $sql = <<<SQL
+CREATE TABLE IF NOT EXISTS $tbl (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(128) NOT NULL,
+  version VARCHAR(16) NOT NULL,
+  created TIMESTAMP NOT NULL,
+  CONSTRAINT plugin_name UNIQUE (name)
+);
+SQL;
+        } else if ($this->getDb()->getDriver() == 'sqlite') {
+            $sql = <<<SQL
+CREATE TABLE IF NOT EXISTS $tbl (
+  id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL,
+  version TEXT NOT NULL,
+  created TIMESTAMP NOT NULL,
+  UNIQUE (name)
+);
+SQL;
+        }
+
+        if ($sql)
+            $this->getDb()->exec($sql);
+
+        return $this;
+
+
     }
 
     /**
@@ -210,8 +252,8 @@ class Factory
     public function isActive($pluginName)
     {
         $pluginName = preg_replace('/[^a-zA-Z0-9_-]/', '', $pluginName);
-        $sql = sprintf('SELECT * FROM plugin WHERE name = %s', $this->db->quote($pluginName));
-        $res = $this->db->query($sql);
+        $sql = sprintf('SELECT * FROM %s WHERE name = %s', $this->getDb()->quoteParameter(self::$DB_TABLE), $this->getDb()->quote($pluginName));
+        $res = $this->getDb()->query($sql);
         if ($res->rowCount() > 0) {
             return true;
         }
@@ -226,8 +268,8 @@ class Factory
     public function getDbPlugin($pluginName)
     {
         $pluginName = preg_replace('/[^a-zA-Z0-9_-]/', '', $pluginName);
-        $sql = sprintf('SELECT * FROM plugin WHERE name = %s', $this->db->quote($pluginName));
-        $res = $this->db->query($sql);
+        $sql = sprintf('SELECT * FROM %s WHERE name = %s', $this->getDb()->quoteParameter(self::$DB_TABLE), $this->getDb()->quote($pluginName));
+        $res = $this->getDb()->query($sql);
         return $res->fetch();
     }
 
@@ -248,8 +290,8 @@ class Factory
         if (!$version) $version = '0.0.0';
         
         // Activate plugin by database entry
-        $sql = sprintf('INSERT INTO plugin VALUES (NULL, %s, %s, NOW())', $this->db->quote($pluginName), $this->db->quote($version));
-        $this->db->query($sql);
+        $sql = sprintf('INSERT INTO %s VALUES (NULL, %s, %s, NOW())', $this->getDb()->quoteParameter(self::$DB_TABLE), $this->getDb()->quote($pluginName), $this->getDb()->quote($version));
+        $this->getDb()->query($sql);
         
         $plugin = $this->makePluginInstance($pluginName);
         $plugin->doActivate();
@@ -273,8 +315,8 @@ class Factory
         $plugin->doDeactivate();
 
         $pluginName = preg_replace('/[^a-zA-Z0-9_-]/', '', $pluginName);
-        $sql = sprintf('DELETE FROM plugin WHERE name = %s', $this->db->quote($pluginName));
-        $this->db->query($sql);
+        $sql = sprintf('DELETE FROM %s WHERE name = %s', $this->getDb()->quoteParameter(self::$DB_TABLE), $this->getDb()->quote($pluginName));
+        $this->getDb()->query($sql);
         unset($this->activePlugins[$pluginName]);
     }
 
@@ -285,4 +327,35 @@ class Factory
     {
         return $this->config;
     }
+
+    /**
+     * Get the table name for queries
+     *
+     * @return string
+     */
+    protected function getTable()
+    {
+        return self::$DB_TABLE;
+    }
+
+    /**
+     * @return \Tk\Db\Pdo
+     */
+    public function getDb()
+    {
+        return $this->db;
+    }
+
+    /**
+     * @param \Tk\Db\Pdo $db
+     * @return $this
+     */
+    public function setDb($db)
+    {
+        $this->db = $db;
+        $this->install();
+        return $this;
+    }
+
+
 }
