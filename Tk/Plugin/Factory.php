@@ -13,12 +13,12 @@ class Factory
     /**
      * @var string
      */
-    static $DB_TABLE = 'plugin';
+    public static $DB_TABLE = 'plugin';
 
     /**
      * @var Factory
      */
-    static $instance = null;
+    public static $instance = null;
 
     /**
      * Active plugins
@@ -55,7 +55,7 @@ class Factory
      * @param \Tk\Config $config
      * @return Factory
      */
-    static function getInstance($config = null)
+    public static function getInstance($config = null)
     {
         if (self::$instance === null) {
             if (!$config)
@@ -171,7 +171,7 @@ SQL;
         
         $data = $this->getDbPlugin($pluginName);
         
-        /** @var Iface $plugin */
+        /* @var Iface $plugin */
         $plugin = new $class($data->id, $pluginName, $this->config);
         if (!$plugin instanceof Iface) {
             throw new Exception('Plugin class uses the incorrect interface: ' . $class);
@@ -309,7 +309,7 @@ SQL;
         if (!$this->isActive($pluginName))
             throw new Exception ('Plugin currently inactive.');
 
-        /** @var Iface $plugin */
+        /* @var Iface $plugin */
         $plugin = $this->activePlugins[$pluginName];
         if (!$plugin) return;
         $plugin->doDeactivate();
