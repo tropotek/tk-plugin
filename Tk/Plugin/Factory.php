@@ -13,6 +13,11 @@ class Factory
     /**
      * @var string
      */
+    public static $STARTUP_CLASS = 'Plugin';
+
+    /**
+     * @var string
+     */
     public static $DB_TABLE = 'plugin';
 
     /**
@@ -77,6 +82,7 @@ class Factory
     {
         if (isset($this->activePlugins[$pluginName]))
             return $this->activePlugins[$pluginName];
+        return null;
     }
 
     /**
@@ -85,13 +91,10 @@ class Factory
     protected function install()
     {
         if($this->db->tableExists(self::$DB_TABLE)) {
-            return;
+            return $this;
         }
-//        $migrate = new \Tk\Util\SqlMigrate($this->db);
-//        $migrate->setTempPath($this->config->getTempPath());
-//        $migrate->migrate($this->config->getVendorPath() . '/ttek/tk-plugin/sql');
 
-        if ($this->getDb()->tableExists($this->getTable())) return;
+        if ($this->getDb()->tableExists($this->getTable())) return $this;
         $tbl = $this->getDb()->quoteParameter($this->getTable());
         // mysql
         $sql = '';
@@ -167,7 +170,7 @@ SQL;
         }
         $class = $this->makePluginClassname($pluginName);
         if (!class_exists($class))
-            include_once $this->makePluginPath($pluginName).'/Plugin.php';
+            include_once $this->makePluginPath($pluginName).'/'.self::$STARTUP_CLASS.'.php';
         
         $data = $this->getDbPlugin($pluginName);
         
@@ -210,10 +213,10 @@ SQL;
         // this may need to be made into a callback per plugin for custom configs?
         if (!empty($this->getPluginInfo($pluginName)->autoload->{'psr-0'})) {
             $ns = current(array_keys(get_object_vars($this->getPluginInfo($pluginName)->autoload->{'psr-0'})));
-            $class = '\\' . $ns . 'Plugin';
+            $class = '\\' . $ns . self::$STARTUP_CLASS;
             if (class_exists($class)) return $class;
         }
-        return '\\' . $pluginName.'\\Plugin';
+        return '\\' . $pluginName.'\\'.self::$STARTUP_CLASS;
     }
 
     /**
@@ -238,6 +241,7 @@ SQL;
         $file = $this->config->getPluginPath().'/'.$pluginName.'/composer.json';
         if (is_readable($file))
             return json_decode(file_get_contents($file));
+        // info not found return a default info object
         $info = new \stdClass();
         $info->name = 'ttek-plg/' . $pluginName;
         $info->version = '0.0.1';
@@ -263,7 +267,7 @@ SQL;
     /**
      *
      * @param string $pluginName
-     * @return bool
+     * @return \StdClass
      */
     public function getDbPlugin($pluginName)
     {

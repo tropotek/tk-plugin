@@ -46,6 +46,13 @@ abstract class Iface
         $this->config = $config;
     }
 
+    /**
+     * @return int
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
 
     /**
      * Init the plugin
