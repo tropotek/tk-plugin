@@ -42,8 +42,8 @@ abstract class Iface
     {
         $this->id = $id;
         $this->name = $name;
-        if (!$config) $config = \Tk\Config::getInstance();
         $this->config = $config;
+        if (!$this->config) $this->config = \Tk\Config::getInstance();
     }
 
     /**
