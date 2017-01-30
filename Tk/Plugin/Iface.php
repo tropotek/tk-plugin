@@ -20,7 +20,7 @@ abstract class Iface
      * @var string
      */
     protected $name = null;
-    
+
     /**
      * @var \stdClass
      */
@@ -30,8 +30,8 @@ abstract class Iface
      * @var \Tk\Config
      */
     private $config = null;
-    
-    
+
+
 
     /**
      * Iface constructor.
@@ -80,8 +80,17 @@ abstract class Iface
     abstract function doDeactivate();
 
     /**
+     * Return the URI of the plugin's configuration page
+     *
+     * @return \Tk\Uri
+     */
+    abstract function getSettingsUrl();
+
+
+
+    /**
      * The plugin ID from the DB of active plugins
-     * 
+     *
      * @return int
      */
     public function getPluginId()
