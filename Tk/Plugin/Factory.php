@@ -171,6 +171,7 @@ SQL;
         $class = $this->makePluginClassname($pluginName);
         if (!class_exists($class)){
             $pluginInclude = $this->makePluginPath($pluginName).'/'.self::$STARTUP_CLASS.'.php';
+            vd($pluginInclude);
             if (!is_file($pluginInclude)) {
                 throw new \Exception('Cannot locate plugin file. You may need to run `composer update` to fix this.');
             }
@@ -178,7 +179,6 @@ SQL;
         }
         
         $data = $this->getDbPlugin($pluginName);
-        
         /* @var Iface $plugin */
         $plugin = new $class($data->id, $pluginName, $this->config);
         if (!$plugin instanceof Iface) {
@@ -219,9 +219,9 @@ SQL;
         if (!empty($this->getPluginInfo($pluginName)->autoload->{'psr-0'})) {
             $ns = current(array_keys(get_object_vars($this->getPluginInfo($pluginName)->autoload->{'psr-0'})));
             $class = '\\' . $ns . self::$STARTUP_CLASS;
-            if (class_exists($class)) return $class;
+            if (class_exists($class)) return $class;        // Return the composer classname
         }
-        return '\\' . $pluginName.'\\'.self::$STARTUP_CLASS;
+        return '\\' . $pluginName.'\\'.self::$STARTUP_CLASS;    // Used for non-composer packages (remember to include all required files in your plugin)
     }
 
     /**
