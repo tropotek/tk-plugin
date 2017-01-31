@@ -169,8 +169,13 @@ SQL;
             throw new Exception('Cannot instantiate an inactive plugin: ' . $pluginName);
         }
         $class = $this->makePluginClassname($pluginName);
-        if (!class_exists($class))
-            include_once $this->makePluginPath($pluginName).'/'.self::$STARTUP_CLASS.'.php';
+        if (!class_exists($class)){
+            $pluginInclude = $this->makePluginPath($pluginName).'/'.self::$STARTUP_CLASS.'.php';
+            if (!is_file($pluginInclude)) {
+                throw new \Exception('Cannot locate plugin file. You may need to run `composer update` to fix this.');
+            }
+            include_once $pluginInclude;
+        }
         
         $data = $this->getDbPlugin($pluginName);
         
