@@ -151,9 +151,10 @@ SQL;
         foreach ($available as $pluginName) {
             if (!$this->isActive($pluginName)) continue;
             $plugin = $this->makePluginInstance($pluginName);
-            $plugin->doInit();
-            $this->activePlugins[$pluginName] = $plugin;
-            
+            if ($plugin) {
+                $plugin->doInit();
+                $this->activePlugins[$pluginName] = $plugin;
+            }
         }
         return $this->activePlugins;
     }
@@ -171,9 +172,11 @@ SQL;
         $class = $this->makePluginClassname($pluginName);
         if (!class_exists($class)){
             $pluginInclude = $this->makePluginPath($pluginName).'/'.self::$STARTUP_CLASS.'.php';
-            vd($pluginInclude);
             if (!is_file($pluginInclude)) {
+                $this->deactivatePlugin($pluginName);
+                //vd('Cannot locate plugin file. You may need to run `composer update` to fix this. ['.$pluginInclude.']');
                 throw new \Exception('Cannot locate plugin file. You may need to run `composer update` to fix this.');
+                return null;
             }
             include_once $pluginInclude;
         }
@@ -303,8 +306,10 @@ SQL;
         $this->getDb()->query($sql);
         
         $plugin = $this->makePluginInstance($pluginName);
-        $plugin->doActivate();
-        $this->activePlugins[$pluginName] = $plugin;
+        if ($plugin) {
+            $plugin->doActivate();
+            $this->activePlugins[$pluginName] = $plugin;
+        }
     }
 
     /**
@@ -319,9 +324,11 @@ SQL;
             throw new Exception ('Plugin currently inactive.');
 
         /* @var Iface $plugin */
-        $plugin = $this->activePlugins[$pluginName];
-        if (!$plugin) return;
-        $plugin->doDeactivate();
+        if (!empty($this->activePlugins[$pluginName])) {
+            $plugin = $this->activePlugins[$pluginName];
+            if (!$plugin) return;
+            $plugin->doDeactivate();
+        }
 
         $pluginName = preg_replace('/[^a-zA-Z0-9_-]/', '', $pluginName);
         $sql = sprintf('DELETE FROM %s WHERE name = %s', $this->getDb()->quoteParameter(self::$DB_TABLE), $this->getDb()->quote($pluginName));
