@@ -1,5 +1,6 @@
 <?php
 namespace Tk\Plugin;
+use App\Plugin\Factory;
 
 /**
  * Class Iface
@@ -27,31 +28,21 @@ abstract class Iface
     private $info = null;
 
     /**
-     * @var \Tk\Config
+     * @var Factory
      */
-    private $config = null;
+    protected $pluginFactory = null;
 
 
+    
 
     /**
      * Iface constructor.
      * @param string $name
-     * @param \Tk\Config $config
      */
-    public function __construct($id, $name, $config = null)
+    public function __construct($id, $name)
     {
         $this->id = $id;
         $this->name = $name;
-        $this->config = $config;
-        if (!$this->config) $this->config = \Tk\Config::getInstance();
-    }
-
-    /**
-     * @return int
-     */
-    public function getId()
-    {
-        return $this->id;
     }
 
     /**
@@ -86,14 +77,13 @@ abstract class Iface
      */
     abstract function getSettingsUrl();
 
-
+    
+    
 
     /**
-     * The plugin ID from the DB of active plugins
-     *
      * @return int
      */
-    public function getPluginId()
+    public function getId()
     {
         return $this->id;
     }
@@ -103,9 +93,25 @@ abstract class Iface
      *
      * @return string
      */
-    public function getPluginName()
+    public function getName()
     {
         return $this->name;
+    }
+
+    /**
+     * @return Factory
+     */
+    public function getPluginFactory()
+    {
+        return $this->pluginFactory;
+    }
+
+    /**
+     * @param Factory $pluginFactory
+     */
+    public function setPluginFactory($pluginFactory)
+    {
+        $this->pluginFactory = $pluginFactory;
     }
 
     /**
@@ -126,17 +132,8 @@ abstract class Iface
      */
     public function getConfig()
     {
-        return $this->config;
+        return \Tk\Config::getInstance();
     }
-
-    /**
-     * @return Factory
-     */
-    public function getPluginFactory()
-    {
-        return \Tk\Plugin\Factory::getInstance();
-    }
-
 
 
 }

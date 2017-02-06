@@ -2,6 +2,8 @@
 namespace Tk\Plugin;
 
 
+
+
 /**
  * @author Michael Mifsud <info@tropotek.com>
  * @link http://www.tropotek.com/
@@ -32,40 +34,44 @@ class Factory
     protected $activePlugins = array();
 
     /**
-     * @var \Tk\Config
-     */
-    protected $config = null;
-
-    /**
      * @var \Tk\Db\Pdo
      */
     protected $db = null;
+
+    /**
+     * @var string
+     */
+    protected $pluginPath = '';
+
+    /**
+     * @var \Tk\EventDispatcher\EventDispatcher
+     */
+    protected $dispatcher = null;
+    
+    
 
 
     /**
      * constructor
      *
-     * @param \Tk\Config $config
      */
-    protected function __construct($config)
+    protected function __construct($db, $pluginPath, $dispacher = null)
     {
-        $this->config = $config;
-        $this->setDb($config->getDb());
+        $this->pluginPath = $pluginPath;
+        
+        $this->setDb($db);
         $this->initActivePlugins();
     }
 
     /**
      * Get an instance of this object
      *
-     * @param \Tk\Config $config
      * @return Factory
      */
-    public static function getInstance($config = null)
+    public static function getInstance($db, $pluginPath, $dispacher = null)
     {
         if (self::$instance === null) {
-            if (!$config)
-                $config = \Tk\Config::getInstance();
-            self::$instance = new self($config);
+            self::$instance = new static($db, $pluginPath, $dispacher);
         }
         return self::$instance;
     }
@@ -80,9 +86,18 @@ class Factory
      */
     public function getPlugin($pluginName)
     {
+        $pluginName = $this->cleanPluginName($pluginName);
         if (isset($this->activePlugins[$pluginName]))
             return $this->activePlugins[$pluginName];
         return null;
+    }
+
+    /**
+     * @return \Tk\EventDispatcher\EventDispatcher
+     */
+    public function getDispatcher()
+    {
+        return $this->dispacher;
     }
 
     /**
@@ -90,16 +105,13 @@ class Factory
      */
     protected function install()
     {
-        if($this->db->tableExists(self::$DB_TABLE)) {
-            return $this;
-        }
+        
+        if (!$this->getDb()->tableExists($this->getTable())) {
+            $tbl = $this->getDb()->quoteParameter($this->getTable());
 
-        if ($this->getDb()->tableExists($this->getTable())) return $this;
-        $tbl = $this->getDb()->quoteParameter($this->getTable());
-        // mysql
-        $sql = '';
-        if ($this->getDb()->getDriver() == 'mysql') {
-            $sql = <<<SQL
+            $sql = '';
+            if ($this->getDb()->getDriver() == 'mysql') {
+                $sql = <<<SQL
 CREATE TABLE IF NOT EXISTS $tbl (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(128) NOT NULL,
@@ -109,8 +121,8 @@ CREATE TABLE IF NOT EXISTS $tbl (
   UNIQUE KEY (`name`)
 ) ENGINE=InnoDB;
 SQL;
-        } else if ($this->getDb()->getDriver() == 'pgsql') {
-            $sql = <<<SQL
+            } else if ($this->getDb()->getDriver() == 'pgsql') {
+                $sql = <<<SQL
 CREATE TABLE IF NOT EXISTS $tbl (
   id SERIAL PRIMARY KEY,
   name VARCHAR(128) NOT NULL,
@@ -119,8 +131,8 @@ CREATE TABLE IF NOT EXISTS $tbl (
   CONSTRAINT plugin_name UNIQUE (name)
 );
 SQL;
-        } else if ($this->getDb()->getDriver() == 'sqlite') {
-            $sql = <<<SQL
+            } else if ($this->getDb()->getDriver() == 'sqlite') {
+                $sql = <<<SQL
 CREATE TABLE IF NOT EXISTS $tbl (
   id INTEGER PRIMARY KEY,
   name TEXT NOT NULL,
@@ -129,14 +141,84 @@ CREATE TABLE IF NOT EXISTS $tbl (
   UNIQUE (name)
 );
 SQL;
-        }
+            }
 
-        if ($sql)
             $this->getDb()->exec($sql);
 
+            if ($this->getDispacher()) {
+                $event = new \Tk\EventDispatcher\Event();
+                $event->set('plugin.factory', $this);
+                $this->getDispacher()->dispatch(Events::INSTALL, $event);
+            }
+        }
         return $this;
+    }
 
+    /**
+     * Activate and install the plugin
+     * Calling the plugin activate method
+     *
+     * @param string $pluginName
+     * @throws Exception
+     */
+    public function activatePlugin($pluginName)
+    {
+        $pluginName = $this->cleanPluginName($pluginName);
+        if ($this->isActive($pluginName))
+            throw new Exception ('Plugin currently active.');
 
+        $info = $this->getPluginInfo($pluginName);
+        $version = '0.0.0';
+        if (!empty($info->version)) $version = $info->version;
+
+        if ($this->dispatcher) {
+            $event = new \Tk\EventDispatcher\Event();
+            $event->set('pluginName', $pluginName);
+            $event->set('info', $info);
+            $this->dispatcher->dispatch(Events::ACTIVATE, $event);
+        }
+
+        // Activate plugin by database entry
+        $sql = sprintf('INSERT INTO %s VALUES (NULL, %s, %s, NOW())', $this->getDb()->quoteParameter($this->getTable()), $this->getDb()->quote($pluginName), $this->getDb()->quote($version));
+        $this->getDb()->query($sql);
+
+        $plugin = $this->makePluginInstance($pluginName);
+        if ($plugin) {
+            $plugin->doActivate();
+            $this->activePlugins[$pluginName] = $plugin;
+        }
+        return true;
+    }
+
+    /**
+     * deactivate the plugin calling the deactivate method
+     *
+     * @param string $pluginName
+     * @throws Exception
+     */
+    public function deactivatePlugin($pluginName)
+    {
+        $pluginName = $this->cleanPluginName($pluginName);
+        if (!$this->isActive($pluginName))
+            throw new Exception ('Plugin currently inactive.');
+
+        /* @var Iface $plugin */
+        if (!empty($this->activePlugins[$pluginName])) {
+            $plugin = $this->activePlugins[$pluginName];
+            if (!$plugin) return false;
+
+            if ($this->dispatcher) {
+                $event = new \Tk\EventDispatcher\Event();
+                $event->set('plugin', $plugin);
+                $this->dispatcher->dispatch(Events::DEACTIVATE, $event);
+            }
+
+            $plugin->doDeactivate();
+            $sql = sprintf('DELETE FROM %s WHERE name = %s', $this->getDb()->quoteParameter($this->getTable()), $this->getDb()->quote($pluginName));
+            $this->getDb()->query($sql);
+            unset($this->activePlugins[$pluginName]);
+        }
+        return true;
     }
 
     /**
@@ -166,16 +248,16 @@ SQL;
      */
     protected function makePluginInstance($pluginName)
     {
+        $pluginName = $this->cleanPluginName($pluginName);
         if (!$this->isActive($pluginName)) {
             throw new Exception('Cannot instantiate an inactive plugin: ' . $pluginName);
         }
         $class = $this->makePluginClassname($pluginName);
         if (!class_exists($class)){
-            $pluginInclude = $this->makePluginPath($pluginName).'/'.self::$STARTUP_CLASS.'.php';
+            $pluginInclude = $this->getPluginPath($pluginName).'/'.self::$STARTUP_CLASS.'.php';
             if (!is_file($pluginInclude)) {
                 $this->deactivatePlugin($pluginName);
-                //vd('Cannot locate plugin file. You may need to run `composer update` to fix this. ['.$pluginInclude.']');
-                throw new \Exception('Cannot locate plugin file. You may need to run `composer update` to fix this.');
+                throw new Exception('Cannot locate plugin file. You may need to run `composer update` to fix this.');
                 return null;
             }
             include_once $pluginInclude;
@@ -183,10 +265,11 @@ SQL;
         
         $data = $this->getDbPlugin($pluginName);
         /* @var Iface $plugin */
-        $plugin = new $class($data->id, $pluginName, $this->config);
+        $plugin = new $class($data->id, $pluginName);
         if (!$plugin instanceof Iface) {
             throw new Exception('Plugin class uses the incorrect interface: ' . $class);
         }
+        $plugin->setPluginFactory($this);
         return $plugin;
     }
 
@@ -197,12 +280,11 @@ SQL;
      */
     public function getAvailablePlugins()
     {
-        $path = $this->config->getPluginPath();
         $fileList = array();
-        if (is_dir($path)) {
-            $fileList = scandir($path);
+        if (is_dir($this->getPluginPath())) {
+            $fileList = scandir($this->getPluginPath());
             foreach ($fileList as $i => $plugPath) {
-                if (preg_match('/^(\.|_)/', $plugPath) || !is_dir($path.'/'.$plugPath)) {
+                if (preg_match('/^(\.|_)/', $plugPath) || !is_dir($this->getPluginPath($plugPath))) {
                     unset($fileList[$i]);
                 }
             }
@@ -218,6 +300,7 @@ SQL;
      */
     public function makePluginClassname($pluginName)
     {
+        $pluginName = $this->cleanPluginName($pluginName);
         // this may need to be made into a callback per plugin for custom configs?
         if (!empty($this->getPluginInfo($pluginName)->autoload->{'psr-0'})) {
             $ns = current(array_keys(get_object_vars($this->getPluginInfo($pluginName)->autoload->{'psr-0'})));
@@ -233,9 +316,11 @@ SQL;
      * @param $pluginName
      * @return string
      */
-    public function makePluginPath($pluginName)
+    public function getPluginPath($pluginName = '')
     {
-        return $this->config->getPluginPath() . '/' . $pluginName;
+        $pluginName = $this->cleanPluginName($pluginName);
+        if (!$pluginName) return $this->pluginPath;
+        return $this->pluginPath . '/' . trim($pluginName, '/');
     }
 
     /**
@@ -246,7 +331,8 @@ SQL;
      */
     public function getPluginInfo($pluginName)
     {
-        $file = $this->config->getPluginPath().'/'.$pluginName.'/composer.json';
+        $pluginName = $this->cleanPluginName($pluginName);
+        $file = $this->getPluginPath($pluginName).'/composer.json';
         if (is_readable($file))
             return json_decode(file_get_contents($file));
         // info not found return a default info object
@@ -267,8 +353,8 @@ SQL;
      */
     public function isActive($pluginName)
     {
-        $pluginName = preg_replace('/[^a-zA-Z0-9_-]/', '', $pluginName);
-        $sql = sprintf('SELECT * FROM %s WHERE name = %s', $this->getDb()->quoteParameter(self::$DB_TABLE), $this->getDb()->quote($pluginName));
+        $pluginName = $this->cleanPluginName($pluginName);
+        $sql = sprintf('SELECT * FROM %s WHERE name = %s', $this->getDb()->quoteParameter($this->getTable()), $this->getDb()->quote($pluginName));
         $res = $this->getDb()->query($sql);
         if ($res->rowCount() > 0) {
             return true;
@@ -283,61 +369,15 @@ SQL;
      */
     public function getDbPlugin($pluginName)
     {
-        $pluginName = preg_replace('/[^a-zA-Z0-9_-]/', '', $pluginName);
-        $sql = sprintf('SELECT * FROM %s WHERE name = %s', $this->getDb()->quoteParameter(self::$DB_TABLE), $this->getDb()->quote($pluginName));
+        $pluginName = $this->cleanPluginName($pluginName);
+        $sql = sprintf('SELECT * FROM %s WHERE name = %s', $this->getDb()->quoteParameter($this->getTable()), $this->getDb()->quote($pluginName));
         $res = $this->getDb()->query($sql);
         return $res->fetch();
     }
-
-    /**
-     * Activate and install the plugin
-     * Calling the plugin activate method
-     *
-     * @param string $pluginName
-     * @throws Exception
-     */
-    public function activatePlugin($pluginName)
+    
+    protected function cleanPluginName($pluginName) 
     {
-        if ($this->isActive($pluginName))
-            throw new Exception ('Plugin currently active.');
-
-        $pluginName = preg_replace('/[^a-zA-Z0-9_-]/', '', $pluginName);
-        $version = $this->getPluginInfo($pluginName)->version;
-        if (!$version) $version = '0.0.0';
-        
-        // Activate plugin by database entry
-        $sql = sprintf('INSERT INTO %s VALUES (NULL, %s, %s, NOW())', $this->getDb()->quoteParameter(self::$DB_TABLE), $this->getDb()->quote($pluginName), $this->getDb()->quote($version));
-        $this->getDb()->query($sql);
-        
-        $plugin = $this->makePluginInstance($pluginName);
-        if ($plugin) {
-            $plugin->doActivate();
-            $this->activePlugins[$pluginName] = $plugin;
-        }
-    }
-
-    /**
-     * deactivate the plugin calling the deactivate method
-     *
-     * @param string $pluginName
-     * @throws Exception
-     */
-    public function deactivatePlugin($pluginName)
-    {
-        if (!$this->isActive($pluginName))
-            throw new Exception ('Plugin currently inactive.');
-
-        /* @var Iface $plugin */
-        if (!empty($this->activePlugins[$pluginName])) {
-            $plugin = $this->activePlugins[$pluginName];
-            if (!$plugin) return;
-            $plugin->doDeactivate();
-        }
-
-        $pluginName = preg_replace('/[^a-zA-Z0-9_-]/', '', $pluginName);
-        $sql = sprintf('DELETE FROM %s WHERE name = %s', $this->getDb()->quoteParameter(self::$DB_TABLE), $this->getDb()->quote($pluginName));
-        $this->getDb()->query($sql);
-        unset($this->activePlugins[$pluginName]);
+        return preg_replace('/[^a-zA-Z0-9_-]/', '', $pluginName);
     }
 
     /**
@@ -376,6 +416,5 @@ SQL;
         $this->install();
         return $this;
     }
-
-
+    
 }
