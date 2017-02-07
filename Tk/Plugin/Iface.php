@@ -1,6 +1,6 @@
 <?php
 namespace Tk\Plugin;
-use App\Plugin\Factory;
+
 
 /**
  * Class Iface
@@ -122,7 +122,7 @@ abstract class Iface
     public function getInfo()
     {
         if (!$this->info) {
-            $this->info = $this->getPluginFactory()->getPluginInfo($this->getPluginName());
+            $this->info = $this->getPluginFactory()->getPluginInfo($this->getName());
         }
         return $this->info;
     }

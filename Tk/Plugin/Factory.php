@@ -54,11 +54,15 @@ class Factory
     /**
      * constructor
      *
+     * @param $db
+     * @param $pluginPath
+     * @param \Tk\EventDispatcher\EventDispatcher|null $dispatcher
      */
-    protected function __construct($db, $pluginPath, $dispacher = null)
+    protected function __construct($db, $pluginPath, $dispatcher = null)
     {
         $this->pluginPath = $pluginPath;
-        
+        $this->dispatcher = $dispatcher;
+
         $this->setDb($db);
         $this->initActivePlugins();
     }
@@ -66,12 +70,15 @@ class Factory
     /**
      * Get an instance of this object
      *
+     * @param $db
+     * @param $pluginPath
+     * @param \Tk\EventDispatcher\EventDispatcher|null $dispatcher
      * @return Factory
      */
-    public static function getInstance($db, $pluginPath, $dispacher = null)
+    public static function getInstance($db, $pluginPath, $dispatcher = null)
     {
         if (self::$instance === null) {
-            self::$instance = new static($db, $pluginPath, $dispacher);
+            self::$instance = new static($db, $pluginPath, $dispatcher);
         }
         return self::$instance;
     }
@@ -97,7 +104,7 @@ class Factory
      */
     public function getDispatcher()
     {
-        return $this->dispacher;
+        return $this->dispatcher;
     }
 
     /**
@@ -145,10 +152,10 @@ SQL;
 
             $this->getDb()->exec($sql);
 
-            if ($this->getDispacher()) {
+            if ($this->getDispatcher()) {
                 $event = new \Tk\EventDispatcher\Event();
                 $event->set('plugin.factory', $this);
-                $this->getDispacher()->dispatch(Events::INSTALL, $event);
+                $this->getDispatcher()->dispatch(Events::INSTALL, $event);
             }
         }
         return $this;
@@ -159,6 +166,7 @@ SQL;
      * Calling the plugin activate method
      *
      * @param string $pluginName
+     * @return bool
      * @throws Exception
      */
     public function activatePlugin($pluginName)
@@ -171,15 +179,16 @@ SQL;
         $version = '0.0.0';
         if (!empty($info->version)) $version = $info->version;
 
-        if ($this->dispatcher) {
+        if ($this->getDispatcher()) {
             $event = new \Tk\EventDispatcher\Event();
             $event->set('pluginName', $pluginName);
             $event->set('info', $info);
-            $this->dispatcher->dispatch(Events::ACTIVATE, $event);
+            $this->getDispatcher()->dispatch(Events::ACTIVATE, $event);
         }
 
         // Activate plugin by database entry
-        $sql = sprintf('INSERT INTO %s VALUES (NULL, %s, %s, NOW())', $this->getDb()->quoteParameter($this->getTable()), $this->getDb()->quote($pluginName), $this->getDb()->quote($version));
+        $sql = sprintf('INSERT INTO %s VALUES (NULL, %s, %s, NOW())',
+            $this->getDb()->quoteParameter($this->getTable()), $this->getDb()->quote($pluginName), $this->getDb()->quote($version));
         $this->getDb()->query($sql);
 
         $plugin = $this->makePluginInstance($pluginName);
@@ -194,6 +203,7 @@ SQL;
      * deactivate the plugin calling the deactivate method
      *
      * @param string $pluginName
+     * @return bool
      * @throws Exception
      */
     public function deactivatePlugin($pluginName)
@@ -214,7 +224,8 @@ SQL;
             }
 
             $plugin->doDeactivate();
-            $sql = sprintf('DELETE FROM %s WHERE name = %s', $this->getDb()->quoteParameter($this->getTable()), $this->getDb()->quote($pluginName));
+            $sql = sprintf('DELETE FROM %s WHERE name = %s',
+                $this->getDb()->quoteParameter($this->getTable()), $this->getDb()->quote($pluginName));
             $this->getDb()->query($sql);
             unset($this->activePlugins[$pluginName]);
         }
@@ -254,11 +265,10 @@ SQL;
         }
         $class = $this->makePluginClassname($pluginName);
         if (!class_exists($class)){
-            $pluginInclude = $this->getPluginPath($pluginName).'/'.self::$STARTUP_CLASS.'.php';
+            $pluginInclude = $this->getPluginPath($pluginName) . '/' . self::$STARTUP_CLASS . '.php';
             if (!is_file($pluginInclude)) {
                 $this->deactivatePlugin($pluginName);
                 throw new Exception('Cannot locate plugin file. You may need to run `composer update` to fix this.');
-                return null;
             }
             include_once $pluginInclude;
         }
@@ -293,7 +303,7 @@ SQL;
     }
 
     /**
-     * The plugin main executible classname is made using this function
+     * The plugin main executable class name is made using this function
      *
      * @param string $pluginName
      * @return string
@@ -305,7 +315,7 @@ SQL;
         if (!empty($this->getPluginInfo($pluginName)->autoload->{'psr-0'})) {
             $ns = current(array_keys(get_object_vars($this->getPluginInfo($pluginName)->autoload->{'psr-0'})));
             $class = '\\' . $ns . self::$STARTUP_CLASS;
-            if (class_exists($class)) return $class;        // Return the composer classname
+            if (class_exists($class)) return $class;        // Return the composer class name
         }
         return '\\' . $pluginName.'\\'.self::$STARTUP_CLASS;    // Used for non-composer packages (remember to include all required files in your plugin)
     }
@@ -332,7 +342,7 @@ SQL;
     public function getPluginInfo($pluginName)
     {
         $pluginName = $this->cleanPluginName($pluginName);
-        $file = $this->getPluginPath($pluginName).'/composer.json';
+        $file = $this->getPluginPath($pluginName) . '/composer.json';
         if (is_readable($file))
             return json_decode(file_get_contents($file));
         // info not found return a default info object
@@ -374,18 +384,17 @@ SQL;
         $res = $this->getDb()->query($sql);
         return $res->fetch();
     }
-    
-    protected function cleanPluginName($pluginName) 
-    {
-        return preg_replace('/[^a-zA-Z0-9_-]/', '', $pluginName);
-    }
 
     /**
-     * @return \Tk\Config
+     * @param $pluginName
+     * @return mixed
      */
-    public function getConfig()
+    public function cleanPluginName($pluginName)
     {
-        return $this->config;
+        if (strstr($pluginName, '/')) {
+            $pluginName = substr($pluginName, strrpos($pluginName,'/')+1);
+        }
+        return preg_replace('/[^a-zA-Z0-9_-]/', '', $pluginName);
     }
 
     /**
@@ -416,5 +425,14 @@ SQL;
         $this->install();
         return $this;
     }
-    
+
+
+    /**
+     * @return \Tk\Config
+     */
+    public function getConfig()
+    {
+        return \Tk\Config::getInstance();
+    }
+
 }
