@@ -310,14 +310,18 @@ SQL;
      */
     public function makePluginClassname($pluginName)
     {
-        $pluginName = $this->cleanPluginName($pluginName);
+        $pluginName = trim($this->cleanPluginName($pluginName));
         // this may need to be made into a callback per plugin for custom configs?
         if (!empty($this->getPluginInfo($pluginName)->autoload->{'psr-0'})) {
             $ns = current(array_keys(get_object_vars($this->getPluginInfo($pluginName)->autoload->{'psr-0'})));
             $class = '\\' . $ns . self::$STARTUP_CLASS;
             if (class_exists($class)) return $class;        // Return the composer class name
         }
-        return '\\' . $pluginName.'\\'.self::$STARTUP_CLASS;    // Used for non-composer packages (remember to include all required files in your plugin)
+        $ns = preg_replace('/[^a-z0-9]/', '-', $pluginName);
+        if (strstr($ns, '-') !== false) {
+            $ns =  substr($ns, strrpos($ns, '-')+1);
+        }
+        return '\\' . $ns . '\\' . self::$STARTUP_CLASS;    // Used for non-composer packages (remember to include all required files in your plugin)
     }
 
     /**
