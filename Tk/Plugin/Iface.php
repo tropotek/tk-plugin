@@ -70,15 +70,18 @@ abstract class Iface
      */
     abstract function doDeactivate();
 
+
+
     /**
      * Return the URI of the plugin's configuration page
+     * Return null for none
      *
      * @return \Tk\Uri
      */
-    abstract function getSettingsUrl();
-
-    
-    
+    public function getSettingsUrl()
+    {
+        return null;
+    }
 
     /**
      * @return int
