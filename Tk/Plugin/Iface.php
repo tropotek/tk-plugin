@@ -71,6 +71,13 @@ abstract class Iface
     abstract function doDeactivate();
 
 
+    /**
+     * @return bool
+     */
+    public function isActive()
+    {
+        return $this->getPluginFactory()->isActive($this->getName());
+    }
 
     /**
      * Return the URI of the plugin's configuration page
