@@ -11,7 +11,12 @@ namespace Tk\Plugin;
  */
 abstract class Iface
 {
+    /**
+     * Use the type to extend the plugin system
+     */
+    const TYPE_SYSTEM = 'system';
 
+    
     /**
      * @var int
      */
@@ -21,6 +26,11 @@ abstract class Iface
      * @var string
      */
     protected $name = null;
+
+    /**
+     * @var string
+     */
+    protected $type = 'system';
 
     /**
      * @var \stdClass
@@ -106,6 +116,22 @@ abstract class Iface
     public function getName()
     {
         return $this->name;
+    }
+
+    /**
+     * @return string
+     */
+    public function getType()
+    {
+        return $this->type;
+    }
+
+    /**
+     * @param string $type
+     */
+    public function setType($type)
+    {
+        $this->type = $type;
     }
 
     /**
