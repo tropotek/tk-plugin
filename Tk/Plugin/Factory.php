@@ -116,39 +116,6 @@ class Factory
         if (!$this->getDb()->tableExists($this->getTable())) {
             $tbl = $this->getDb()->quoteParameter($this->getTable());
 
-            // TODO:     proposed new structure? We need to handle different plugin permissions, a single plugin for multiple instances???? 
-//            $sql = <<<SQL
-//CREATE TABLE IF NOT EXISTS $tbl (
-//  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-//  `foreign_id` INT(10) NOT NULL DEFAULT 0,
-//  `foreign_key` VARCHAR(128) NOT NULL DEFAULT '',
-//  `name` VARCHAR(128) NOT NULL,
-//  `settingsUrl` VARCHAR(255) NOT NULL,
-//  `installed` TIMESTAMP NOT NULL,
-//  PRIMARY KEY (`foreign_id`, `foreign_key`, `id`),
-//  UNIQUE KEY (`foreign_id`, `foreign_key`, `name`)
-//) ENGINE=InnoDB;
-//CREATE TABLE IF NOT EXISTS {$tbl}_domain (
-//  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-//  `plugin_id` INT(10) NOT NULL DEFAULT 0,
-//  `name` VARCHAR(128) NOT NULL,
-//  `settingsUrl` VARCHAR(255) NOT NULL,
-//  `installed` TIMESTAMP NOT NULL,
-//  PRIMARY KEY (`id`)
-//) ENGINE=InnoDB;
-//CREATE TABLE IF NOT EXISTS {$tbl}_domain_active (
-//  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-//  `foreign_id` INT(10) NOT NULL DEFAULT 0,
-//  `foreign_key` VARCHAR(128) NOT NULL DEFAULT '',
-//  `plugin_id` INT(10) NOT NULL DEFAULT 0,
-//  `plugin_domain_id` INT(10) NOT NULL DEFAULT 0,
-//  PRIMARY KEY (`id`)
-//) ENGINE=InnoDB;
-//
-//
-//SQL;
-            
-            
             $sql = '';
             if ($this->getDb()->getDriver() == 'mysql') {
                 $sql = <<<SQL
@@ -159,7 +126,7 @@ CREATE TABLE IF NOT EXISTS $tbl (
   `created` TIMESTAMP NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY (`name`)
-) ENGINE=InnoDB;
+) ENGINE=InnoDB CHARSET=utf8;
 SQL;
             } else if ($this->getDb()->getDriver() == 'pgsql') {
                 $sql = <<<SQL
