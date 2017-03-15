@@ -126,7 +126,7 @@ CREATE TABLE IF NOT EXISTS $tbl (
   `created` TIMESTAMP NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY (`name`)
-) ENGINE=InnoDB CHARSET=utf8;
+) ENGINE=InnoDB;
 SQL;
             } else if ($this->getDb()->getDriver() == 'pgsql') {
                 $sql = <<<SQL
