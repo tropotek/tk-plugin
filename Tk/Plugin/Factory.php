@@ -187,14 +187,18 @@ SQL;
         }
 
         // Activate plugin by database entry
-        $sql = sprintf('INSERT INTO %s VALUES (NULL, %s, %s, NOW())',
-            $this->getDb()->quoteParameter($this->getTable()), $this->getDb()->quote($pluginName), $this->getDb()->quote($version));
-        $this->getDb()->query($sql);
-
+        $this->dbActivate($pluginName, $version);
+        
         $plugin = $this->makePluginInstance($pluginName);
         if ($plugin) {
-            $plugin->doActivate();
-            $this->activePlugins[$pluginName] = $plugin;
+            try {
+                $plugin->doActivate();
+                $this->activePlugins[$pluginName] = $plugin;
+            } catch (\Exception $e) {
+                $this->dbDeactivate($pluginName);
+                vd($e->__toString());
+                throw new Exception($e->getMessage(), $e->getCode(), $e);
+            }
         }
         return true;
     }
@@ -222,16 +226,38 @@ SQL;
                 $event->set('plugin', $plugin);
                 $this->dispatcher->dispatch(Events::DEACTIVATE, $event);
             }
+            $version = '0.0.0';
+            if (!empty($plugin->getInfo()->version)) $version = $plugin->getInfo()->version;
 
-            $plugin->doDeactivate();
-            $sql = sprintf('DELETE FROM %s WHERE name = %s',
-                $this->getDb()->quoteParameter($this->getTable()), $this->getDb()->quote($pluginName));
-            $this->getDb()->query($sql);
-            unset($this->activePlugins[$pluginName]);
+            try {
+                $plugin->doDeactivate();
+
+                $this->dbDeactivate($pluginName);
+                unset($this->activePlugins[$pluginName]);
+            } catch (\Exception $e) {
+                $this->dbActivate($pluginName, $version);
+                vd($e->__toString());
+                throw new Exception($e->getMessage(), $e->getCode(), $e);
+            }
         }
         return true;
     }
 
+    protected function dbActivate($pluginName, $version = '0.0.0')
+    {
+        $pluginName = $this->cleanPluginName($pluginName);
+        $sql = sprintf('INSERT INTO %s VALUES (NULL, %s, %s, NOW())',
+            $this->getDb()->quoteParameter($this->getTable()), $this->getDb()->quote($pluginName), $this->getDb()->quote($version));
+        $this->getDb()->query($sql);
+    }
+
+    protected function dbDeactivate($pluginName)
+    {
+        $pluginName = $this->cleanPluginName($pluginName);
+        $sql = sprintf('DELETE FROM %s WHERE name = %s', $this->getDb()->quoteParameter($this->getTable()), $this->getDb()->quote($pluginName));
+        $this->getDb()->query($sql);
+    }
+    
     /**
      * Registration adds the plugin to the list of plugins, and also
      * includes it's code into our runtime.
