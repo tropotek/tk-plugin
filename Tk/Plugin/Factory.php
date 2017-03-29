@@ -44,7 +44,7 @@ class Factory
     protected $pluginPath = '';
 
     /**
-     * @var \Tk\EventDispatcher\EventDispatcher
+     * @var \Tk\Event\Dispatcher
      */
     protected $dispatcher = null;
     
@@ -56,7 +56,7 @@ class Factory
      *
      * @param $db
      * @param $pluginPath
-     * @param \Tk\EventDispatcher\EventDispatcher|null $dispatcher
+     * @param \Tk\Event\Dispatcher|null $dispatcher
      */
     protected function __construct($db, $pluginPath, $dispatcher = null)
     {
@@ -72,7 +72,7 @@ class Factory
      *
      * @param $db
      * @param $pluginPath
-     * @param \Tk\EventDispatcher\EventDispatcher|null $dispatcher
+     * @param \Tk\Event\Dispatcher|null $dispatcher
      * @return Factory
      */
     public static function getInstance($db, $pluginPath, $dispatcher = null)
@@ -100,7 +100,7 @@ class Factory
     }
 
     /**
-     * @return \Tk\EventDispatcher\EventDispatcher
+     * @return \Tk\Event\Dispatcher
      */
     public function getDispatcher()
     {
@@ -153,7 +153,7 @@ SQL;
             $this->getDb()->exec($sql);
 
             if ($this->getDispatcher()) {
-                $event = new \Tk\EventDispatcher\Event();
+                $event = new \Tk\Event\Event();
                 $event->set('plugin.factory', $this);
                 $this->getDispatcher()->dispatch(Events::INSTALL, $event);
             }
@@ -180,7 +180,7 @@ SQL;
         if (!empty($info->version)) $version = $info->version;
 
         if ($this->getDispatcher()) {
-            $event = new \Tk\EventDispatcher\Event();
+            $event = new \Tk\Event\Event();
             $event->set('pluginName', $pluginName);
             $event->set('info', $info);
             $this->getDispatcher()->dispatch(Events::ACTIVATE, $event);
@@ -222,7 +222,7 @@ SQL;
             if (!$plugin) return false;
 
             if ($this->dispatcher) {
-                $event = new \Tk\EventDispatcher\Event();
+                $event = new \Tk\Event\Event();
                 $event->set('plugin', $plugin);
                 $this->dispatcher->dispatch(Events::DEACTIVATE, $event);
             }

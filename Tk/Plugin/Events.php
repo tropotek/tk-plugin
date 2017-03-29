@@ -15,21 +15,21 @@ final class Events
     /**
      * 
      *
-     * @event \Tk\EventDispatcher\Event
+     * @event \Tk\Event\Event
      */
     const INSTALL = 'plugin.onInstall';
 
     /**
      *
      *
-     * @event \Tk\EventDispatcher\Event
+     * @event \Tk\Event\Event
      */
     const ACTIVATE = 'plugin.onActivate';
     
     /**
      *
      *
-     * @event \Tk\EventDispatcher\Event
+     * @event \Tk\Event\Event
      */
     const DEACTIVATE = 'plugin.onDeactivate';
 
