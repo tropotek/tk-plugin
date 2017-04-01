@@ -75,7 +75,7 @@ class Factory
      * @param \Tk\Event\Dispatcher|null $dispatcher
      * @return Factory
      */
-    public static function getInstance($db, $pluginPath, $dispatcher = null)
+    public static function getInstance($db, $pluginPath = '', $dispatcher = null)
     {
         if (self::$instance === null) {
             self::$instance = new static($db, $pluginPath, $dispatcher);
