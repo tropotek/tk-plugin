@@ -84,6 +84,30 @@ class Factory
     }
 
     /**
+     * Check the live site composer.json to see if this plugin
+     * was installed by `composer update` or a archive install
+     *
+     *
+     * @param $pluginName
+     * @param \Composer\Autoload\ClassLoader $composer
+     * @return bool
+     */
+    public static function isComposer($pluginName, $composer = null)
+    {
+        if (!$composer)
+            $composer = \Tk\Config::getInstance()->getComposer();
+
+        // Disable deletion of plugins that are installed via composer
+        $result = call_user_func_array('array_merge', $composer->getPrefixes());
+        foreach ($result as $item) {
+            if (preg_match('/'.preg_quote($pluginName).'$/', $item)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Get Plugin instance
      * Can only be called if the plugin is active
      * Returns null otherwise...
