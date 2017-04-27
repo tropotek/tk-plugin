@@ -1,5 +1,11 @@
 #CHANGELOG#
 
+Ver 2.0.6 [2017-04-27]:
+-------------------------------
+ - Minor Code Updates
+ - 252s-dev.vet.unimelb.edu.au
+
+
 Ver 2.0.5 [2017-04-02]:
 -------------------------------
  - Minor Code Updates
