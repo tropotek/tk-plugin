@@ -403,9 +403,9 @@ SQL;
         $info = new \stdClass();
         $info->name = 'ttek-plg/' . $pluginName;
         $info->version = '0.0.1';
-        $info->time = \Tk\Date::create()->format(\Tk\Date::FORMAT_ISO_DATE);
+        $info->time = \Tk\Date::create()->format(\Tk\Date::FORMAT_ISO_DATETIME);
         if (is_dir(dirname($file))) {
-            $info->time = \Tk\Date::create(filectime(dirname($file)))->format(\Tk\Date::FORMAT_ISO_DATE);
+            $info->time = \Tk\Date::create(filectime(dirname($file)))->format(\Tk\Date::FORMAT_ISO_DATETIME);
         }
         return $info;
     }
