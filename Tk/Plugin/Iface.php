@@ -172,4 +172,43 @@ abstract class Iface
     }
 
 
+
+    /**
+     * @param string $zoneName
+     * @param string $zoneId
+     */
+    public function doZoneEnable($zoneName, $zoneId) { }
+
+    /**
+     * @param string $zoneName
+     * @param string $zoneId
+     */
+    public function doZoneDisable($zoneName, $zoneId) { }
+
+    /**
+     * @param string $zoneName
+     * @param string $zoneId
+     * @return bool
+     */
+    public function isZonePluginEnabled($zoneName, $zoneId)
+    {
+        return $this->getPluginFactory()->isZonePluginEnabled($this->getName(), $zoneName, $zoneId);
+    }
+
+    /**
+     * Get the zone settings URL, if null then there is none
+     * <code>
+     *   // Some example code for zone setup urls
+     *   switch ($zoneName) {
+     *     case 'institution':
+     *       return \Tk\Uri::create('/lti/institutionSettings.html');
+     *   }
+     * </code>
+     * @return string|\Tk\Uri|null
+     */
+    public function getZoneSettingsUrl($zoneName)
+    {
+        return null;
+    }
+
 }

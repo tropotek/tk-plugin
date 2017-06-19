@@ -29,9 +29,14 @@ class Factory
 
     /**
      * Active plugins
-     * @var array
+     * @var array|Iface[]
      */
     protected $activePlugins = array();
+
+    /**
+     * @var array|Iface[]
+     */
+    protected $zonePlugins = array();
 
     /**
      * @var \Tk\Db\Pdo
@@ -139,6 +144,7 @@ class Factory
         
         if (!$this->getDb()->tableExists($this->getTable())) {
             $tbl = $this->getDb()->quoteParameter($this->getTable());
+            $zoneTable = $this->getDb()->quoteParameter($this->getZoneTable());
 
             $sql = '';
             if ($this->getDb()->getDriver() == 'mysql') {
@@ -151,6 +157,12 @@ CREATE TABLE IF NOT EXISTS $tbl (
   PRIMARY KEY (`id`),
   UNIQUE KEY (`name`)
 ) ENGINE=InnoDB;
+CREATE TABLE IF NOT EXISTS $zoneTable (
+  plugin_name VARCHAR(128) NOT NULL,
+  zone_name VARCHAR(128) NOT NULL,
+  zone_id INT(10) NOT NULL DEFAULT 0,
+  PRIMARY KEY (plugin_name, zone_name, zone_id)
+) ENGINE=InnoDB;
 SQL;
             } else if ($this->getDb()->getDriver() == 'pgsql') {
                 $sql = <<<SQL
@@ -161,6 +173,12 @@ CREATE TABLE IF NOT EXISTS $tbl (
   created TIMESTAMP NOT NULL,
   CONSTRAINT plugin_name UNIQUE (name)
 );
+CREATE TABLE IF NOT EXISTS $zoneTable (
+  plugin_name VARCHAR(128) NOT NULL,
+  zone_name VARCHAR(128) NOT NULL,
+  zone_id INT(10) NOT NULL DEFAULT 0,
+  PRIMARY KEY (plugin_name, zone_name, zone_id)
+);
 SQL;
             } else if ($this->getDb()->getDriver() == 'sqlite') {
                 $sql = <<<SQL
@@ -170,6 +188,12 @@ CREATE TABLE IF NOT EXISTS $tbl (
   version TEXT NOT NULL,
   created TIMESTAMP NOT NULL,
   UNIQUE (name)
+);
+CREATE TABLE IF NOT EXISTS $zoneTable (
+  plugin_name VARCHAR(128) NOT NULL,
+  zone_name VARCHAR(128) NOT NULL,
+  zone_id INT(10) NOT NULL DEFAULT 0,
+  PRIMARY KEY (plugin_name, zone_name, zone_id)
 );
 SQL;
             }
@@ -487,6 +511,118 @@ SQL;
     public function getConfig()
     {
         return \Tk\Config::getInstance();
+    }
+
+
+
+
+
+
+
+    /**
+     * Get the table name for queries
+     *
+     * @return string
+     */
+    protected function getZoneTable()
+    {
+        return $this->getTable().'_zone';
+    }
+
+
+    /**
+     * @param Iface $plugin
+     * @param $zoneName
+     * @return $this
+     */
+    public function registerZonePlugin(Iface $plugin, $zoneName)
+    {
+        if (!isset($this->zonePlugins[$zoneName])) {
+            $this->zonePlugins[$zoneName] = array();
+        }
+        $this->zonePlugins[$zoneName][$plugin->getName()] = $plugin;
+        return $this;
+    }
+
+    /**
+     * @param $zoneName
+     * @return array|Iface[]
+     */
+    public function getZonePluginList($zoneName)
+    {
+        if (isset($this->zonePlugins[$zoneName]))
+            return $this->zonePlugins[$zoneName];
+        return array();
+    }
+
+    /**
+     *
+     * @param string $pluginName
+     * @param string $zoneName
+     * @param string $zoneId
+     * @return bool
+     */
+    public function isZonePluginEnabled($pluginName, $zoneName, $zoneId)
+    {
+        $pluginName = $this->cleanPluginName($pluginName);
+        $zoneName = $this->cleanPluginName($zoneName);
+
+        $sql = sprintf('SELECT * FROM %s WHERE plugin_name = %s AND zone_name = %s AND zone_id = %d ',
+            $this->getDb()->quoteParameter($this->getZoneTable()),
+            $this->getDb()->quote($pluginName), $this->getDb()->quote($zoneName), (int)$zoneId);
+        $res = $this->getDb()->query($sql);
+        return ($res->rowCount() > 0);
+    }
+
+    /**
+     *
+     * @param string $pluginName
+     * @param string $zoneName
+     * @param string $zoneId
+     * @return $this
+     */
+    public function enableZonePlugin($pluginName, $zoneName, $zoneId)
+    {
+        $pluginName = $this->cleanPluginName($pluginName);
+        $zoneName = $this->cleanPluginName($zoneName);
+
+        if ($this->isZonePluginEnabled($pluginName, $zoneName, $zoneId)) return $this;
+
+        $sql = sprintf('INSERT INTO %s VALUES (%s, %s, %d)',
+            $this->getDb()->quoteParameter($this->getZoneTable()),
+            $this->getDb()->quote($pluginName), $this->getDb()->quote($zoneName), (int)$zoneId);
+        $this->getDb()->query($sql);
+
+        /** @var Iface $plugin */
+        $plugin = $this->getPlugin($pluginName);
+        if ($plugin) {
+            $plugin->doZoneEnable($zoneName, $zoneId);
+        }
+        return $this;
+    }
+
+    /**
+     *
+     * @param string $pluginName
+     * @param string $zoneName
+     * @param string $zoneId
+     * @return $this
+     */
+    public function disableZonePlugin($pluginName, $zoneName, $zoneId)
+    {
+        $pluginName = $this->cleanPluginName($pluginName);
+        $zoneName = $this->cleanPluginName($zoneName);
+
+        $sql = sprintf('DELETE FROM %s WHERE plugin_name = %s AND zone_name = %s AND zone_id = %d ',
+            $this->getDb()->quoteParameter($this->getZoneTable()),
+            $this->getDb()->quote($pluginName), $this->getDb()->quote($zoneName), (int)$zoneId);
+        $this->getDb()->query($sql);
+        /** @var Iface $plugin */
+        $plugin = $this->getPlugin($pluginName);
+        if ($plugin) {
+            $plugin->doZoneDisable($zoneName, $zoneId);
+        }
+        return $this;
     }
 
 }
