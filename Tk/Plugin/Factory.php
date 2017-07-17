@@ -338,7 +338,6 @@ SQL;
             throw new Exception('Cannot instantiate an inactive plugin: ' . $pluginName);
         }
         $class = $this->makePluginClassname($pluginName);
-        vd($class);
         if (!class_exists($class)){
             $pluginInclude = $this->getPluginPath($pluginName) . '/' . self::$STARTUP_CLASS . '.php';
             if (!is_file($pluginInclude)) {
@@ -349,7 +348,6 @@ SQL;
         }
         
         $data = $this->getDbPlugin($pluginName);
-        vd($data);
         /* @var Iface $plugin */
         $plugin = new $class($data->id, $pluginName);
         if (!$plugin instanceof Iface) {
@@ -387,12 +385,10 @@ SQL;
     public function makePluginClassname($pluginName)
     {
         $pluginName = trim($this->cleanPluginName($pluginName));
-        
         // this may need to be made into a callback per plugin for custom configs?
         if (!empty($this->getPluginInfo($pluginName)->autoload->{'psr-0'})) {
             $ns = current(array_keys(get_object_vars($this->getPluginInfo($pluginName)->autoload->{'psr-0'})));
             $class = '\\' . $ns . self::$STARTUP_CLASS;
-            vd($class, class_exists($class));
             if (class_exists($class)) return $class;        // Return the composer class name
         }
         $ns = preg_replace('/[^a-z0-9]/', '-', $pluginName);
