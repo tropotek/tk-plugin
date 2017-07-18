@@ -337,15 +337,26 @@ SQL;
         if (!$this->isActive($pluginName)) {
             throw new Exception('Cannot instantiate an inactive plugin: ' . $pluginName);
         }
-        $class = $this->makePluginClassname($pluginName);
-        if (!class_exists($class)){
-            $pluginInclude = $this->getPluginPath($pluginName) . '/' . self::$STARTUP_CLASS . '.php';
-            if (!is_file($pluginInclude)) {
-                $this->deactivatePlugin($pluginName);
-                throw new Exception('Cannot locate plugin file. You may need to run `composer update` to fix this.');
-            }
+
+        $pluginConfig = $this->getPluginPath($pluginName) . '/config.php';
+        if (is_file($pluginConfig)) {
+            include_once $pluginConfig;
+        };
+        $pluginInclude = $this->getPluginPath($pluginName) . '/' . self::$STARTUP_CLASS . '.php';
+        if (is_file($pluginInclude)) {
             include_once $pluginInclude;
         }
+        $class = $this->makePluginClassname($pluginName);
+
+//        if (!class_exists($class)){
+//            $pluginInclude = $this->getPluginPath($pluginName) . '/' . self::$STARTUP_CLASS . '.php';
+//            if (!is_file($pluginInclude)) {
+//                $this->deactivatePlugin($pluginName);
+//                throw new Exception('Cannot locate plugin file. You may need to run `composer update` to fix this.');
+//            } else {
+//                include_once $pluginInclude;
+//            }
+//        }
         
         $data = $this->getDbPlugin($pluginName);
         /* @var Iface $plugin */
@@ -355,25 +366,6 @@ SQL;
         }
         $plugin->setPluginFactory($this);
         return $plugin;
-    }
-
-    /**
-     * getAvailablePlugins
-     *
-     * @return array
-     */
-    public function getAvailablePlugins()
-    {
-        $fileList = array();
-        if (is_dir($this->getPluginPath())) {
-            $fileList = scandir($this->getPluginPath());
-            foreach ($fileList as $i => $plugPath) {
-                if (preg_match('/^(\.|_)/', $plugPath) || !is_dir($this->getPluginPath($plugPath))) {
-                    unset($fileList[$i]);
-                }
-            }
-        }
-        return array_merge($fileList);
     }
 
     /**
@@ -395,7 +387,8 @@ SQL;
         if (strstr($ns, '-') !== false) {
             $ns =  substr($ns, strrpos($ns, '-')+1);
         }
-        return '\\' . $ns . '\\' . self::$STARTUP_CLASS;    // Used for non-composer packages (remember to include all required files in your plugin)
+        $class = '\\' . $ns . '\\' . self::$STARTUP_CLASS;    // Used for non-composer packages (remember to include all required files in your plugin)
+        return $class;
     }
 
     /**
@@ -409,6 +402,25 @@ SQL;
         $pluginName = $this->cleanPluginName($pluginName);
         if (!$pluginName) return $this->pluginPath;
         return $this->pluginPath . '/' . trim($pluginName, '/');
+    }
+
+    /**
+     * getAvailablePlugins
+     *
+     * @return array
+     */
+    public function getAvailablePlugins()
+    {
+        $fileList = array();
+        if (is_dir($this->getPluginPath())) {
+            $fileList = scandir($this->getPluginPath());
+            foreach ($fileList as $i => $plugPath) {
+                if (preg_match('/^(\.|_)/', $plugPath) || !is_dir($this->getPluginPath($plugPath))) {
+                    unset($fileList[$i]);
+                }
+            }
+        }
+        return array_merge($fileList);
     }
 
     /**
