@@ -55,11 +55,11 @@ abstract class Iface
         $this->name = $name;
     }
 
+
     /**
      * Init the plugin
      * This is called when the session first registers the plugin to the queue
      * So it is the first called method after the constructor.....
-     *
      */
     abstract function doInit();
 
@@ -68,15 +68,24 @@ abstract class Iface
      * installing any DB and settings required to run
      * Will only be called when activating the plugin in the
      * plugin control panel
-     *
      */
     abstract function doActivate();
+
+
+    /**
+     * Upgrade the plugin
+     * Called when the file version is larger than the version in the DB table
+     *
+     * @param string $oldVersion
+     * @param string $newVersion
+     */
+    function doUpgrade($oldVersion, $newVersion) { }
+
 
     /**
      * Deactivate the plugin removing any DB data and settings
      * Will only be called when deactivating the plugin in the
      * plugin control panel
-     *
      */
     abstract function doDeactivate();
 
@@ -171,8 +180,6 @@ abstract class Iface
         return \Tk\Config::getInstance();
     }
 
-
-
     /**
      * @param string $zoneName
      * @param string $zoneId
@@ -210,5 +217,7 @@ abstract class Iface
     {
         return null;
     }
+
+
 
 }

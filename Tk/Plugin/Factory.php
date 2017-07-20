@@ -299,6 +299,14 @@ SQL;
         $this->getDb()->query($sql);
     }
 
+    protected function dbUpgrade($pluginName, $version = '0.0.0')
+    {
+        $pluginName = $this->cleanPluginName($pluginName);
+        $sql = sprintf('UPDATE %s SET version = %s WHERE name = %s',
+            $this->getDb()->quoteParameter($this->getTable()), $this->getDb()->quote($version), $this->getDb()->quote($pluginName));
+        $this->getDb()->query($sql);
+    }
+
     protected function dbDeactivate($pluginName)
     {
         $pluginName = $this->cleanPluginName($pluginName);
@@ -365,6 +373,14 @@ SQL;
             throw new Exception('Plugin class uses the incorrect interface: ' . $class);
         }
         $plugin->setPluginFactory($this);
+
+        // If all ok, check if the plugin needs to be upgraded.
+        if (version_compare($plugin->getInfo()->version, $data->version, '>')) {
+            vd('Upgrade: ' . $data->version . ' => ' . $plugin->getInfo()->version);
+            $plugin->doUpgrade($data->version, $plugin->getInfo()->version);
+            $this->dbUpgrade($pluginName, $plugin->getInfo()->version);
+        }
+
         return $plugin;
     }
 
@@ -424,7 +440,7 @@ SQL;
     }
 
     /**
-     * Get Plugin Meta Data
+     * Get Plugin Meta Data from the composer.json file if one exists
      *
      * @param $pluginName
      * @return \stdClass
@@ -435,7 +451,9 @@ SQL;
         $file = $this->getPluginPath($pluginName) . '/composer.json';
         if (is_readable($file))
             return json_decode(file_get_contents($file));
-        // info not found return a default info object
+
+        // Info not found return a default info object
+        // TODO: should we get this onfo from another place controllable by the plugin, ie an ini file or static method???
         $info = new \stdClass();
         $info->name = 'ttek-plg/' . $pluginName;
         $info->version = '0.0.1';
@@ -443,6 +461,7 @@ SQL;
         if (is_dir(dirname($file))) {
             $info->time = \Tk\Date::create(filectime(dirname($file)))->format(\Tk\Date::FORMAT_ISO_DATETIME);
         }
+
         return $info;
     }
 
