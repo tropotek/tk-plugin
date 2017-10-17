@@ -35,7 +35,7 @@ abstract class Iface
     /**
      * @var \stdClass
      */
-    private $info = null;
+    protected $info = null;
 
     /**
      * @var Factory
@@ -43,7 +43,6 @@ abstract class Iface
     protected $pluginFactory = null;
 
 
-    
 
     /**
      * Iface constructor.
@@ -71,7 +70,6 @@ abstract class Iface
      */
     abstract function doActivate();
 
-
     /**
      * Upgrade the plugin
      * Called when the file version is larger than the version in the DB table
@@ -81,22 +79,12 @@ abstract class Iface
      */
     function doUpgrade($oldVersion, $newVersion) { }
 
-
     /**
      * Deactivate the plugin removing any DB data and settings
      * Will only be called when deactivating the plugin in the
      * plugin control panel
      */
     abstract function doDeactivate();
-
-
-    /**
-     * @return bool
-     */
-    public function isActive()
-    {
-        return $this->getPluginFactory()->isActive($this->getName());
-    }
 
     /**
      * Return the URI of the plugin's configuration page
@@ -107,6 +95,54 @@ abstract class Iface
     public function getSettingsUrl()
     {
         return null;
+    }
+
+    /**
+     * @param string $zoneName
+     * @param string $zoneId
+     */
+    public function doZoneEnable($zoneName, $zoneId) { }
+
+    /**
+     * @param string $zoneName
+     * @param string $zoneId
+     */
+    public function doZoneDisable($zoneName, $zoneId) { }
+
+    /**
+     * @param string $zoneName
+     * @param string $zoneId
+     * @return bool
+     */
+    public function isZonePluginEnabled($zoneName, $zoneId)
+    {
+        return $this->getPluginFactory()->isZonePluginEnabled($this->getName(), $zoneName, $zoneId);
+    }
+
+    /**
+     * Get the zone settings URL, if null then there is none
+     * <code>
+     *   // Some example code for zone setup urls
+     *   switch ($zoneName) {
+     *     case 'institution':
+     *       return \Tk\Uri::create('/lti/institutionSettings.html');
+     *   }
+     * </code>
+     * @return string|\Tk\Uri|null
+     */
+    public function getZoneSettingsUrl($zoneName)
+    {
+        return null;
+    }
+
+
+
+    /**
+     * @return bool
+     */
+    public function isActive()
+    {
+        return $this->getPluginFactory()->isActive($this->getName());
     }
 
     /**
@@ -179,45 +215,5 @@ abstract class Iface
     {
         return \Tk\Config::getInstance();
     }
-
-    /**
-     * @param string $zoneName
-     * @param string $zoneId
-     */
-    public function doZoneEnable($zoneName, $zoneId) { }
-
-    /**
-     * @param string $zoneName
-     * @param string $zoneId
-     */
-    public function doZoneDisable($zoneName, $zoneId) { }
-
-    /**
-     * @param string $zoneName
-     * @param string $zoneId
-     * @return bool
-     */
-    public function isZonePluginEnabled($zoneName, $zoneId)
-    {
-        return $this->getPluginFactory()->isZonePluginEnabled($this->getName(), $zoneName, $zoneId);
-    }
-
-    /**
-     * Get the zone settings URL, if null then there is none
-     * <code>
-     *   // Some example code for zone setup urls
-     *   switch ($zoneName) {
-     *     case 'institution':
-     *       return \Tk\Uri::create('/lti/institutionSettings.html');
-     *   }
-     * </code>
-     * @return string|\Tk\Uri|null
-     */
-    public function getZoneSettingsUrl($zoneName)
-    {
-        return null;
-    }
-
-
 
 }
