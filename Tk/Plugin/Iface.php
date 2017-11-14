@@ -216,4 +216,15 @@ abstract class Iface
         return \Tk\Config::getInstance();
     }
 
+    /**
+     * Get the plugin relative path
+     * EG: '/plugin/ems-plugin/'
+     *
+     * @return string
+     */
+    public function getPluginPath()
+    {
+        return dirname(str_replace($this->getConfig()->getSitePath(), '', \Tk\Object::classPath(get_class($this))));
+    }
+
 }
