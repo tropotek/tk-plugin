@@ -138,6 +138,7 @@ class Factory
 
     /**
      * Install the plugin tables
+     * @throws \Tk\Db\Exception
      */
     protected function install()
     {
@@ -291,6 +292,11 @@ SQL;
         return true;
     }
 
+    /**
+     * @param $pluginName
+     * @param string $version
+     * @throws \Tk\Db\Exception
+     */
     protected function dbActivate($pluginName, $version = '0.0.0')
     {
         $pluginName = $this->cleanPluginName($pluginName);
@@ -299,6 +305,11 @@ SQL;
         $this->getDb()->query($sql);
     }
 
+    /**
+     * @param $pluginName
+     * @param string $version
+     * @throws \Tk\Db\Exception
+     */
     protected function dbUpgrade($pluginName, $version = '0.0.0')
     {
         $pluginName = $this->cleanPluginName($pluginName);
@@ -307,17 +318,22 @@ SQL;
         $this->getDb()->query($sql);
     }
 
+    /**
+     * @param $pluginName
+     * @throws \Tk\Db\Exception
+     */
     protected function dbDeactivate($pluginName)
     {
         $pluginName = $this->cleanPluginName($pluginName);
         $sql = sprintf('DELETE FROM %s WHERE name = %s', $this->getDb()->quoteParameter($this->getTable()), $this->getDb()->quote($pluginName));
         $this->getDb()->query($sql);
     }
-    
+
     /**
      * Registration adds the plugin to the list of plugins, and also
      * includes it's code into our runtime.
      *
+     * @throws Exception
      */
     protected function initActivePlugins()
     {
@@ -338,6 +354,7 @@ SQL;
      * @param $pluginName
      * @return Iface
      * @throws Exception
+     * @throws \Tk\Db\Exception
      */
     protected function makePluginInstance($pluginName)
     {
@@ -469,6 +486,7 @@ SQL;
      *
      * @param string $pluginName
      * @return bool
+     * @throws \Tk\Db\Exception
      */
     public function isActive($pluginName)
     {
@@ -485,6 +503,7 @@ SQL;
      *
      * @param string $pluginName
      * @return \StdClass
+     * @throws \Tk\Db\Exception
      */
     public function getDbPlugin($pluginName)
     {
@@ -527,6 +546,7 @@ SQL;
     /**
      * @param \Tk\Db\Pdo $db
      * @return $this
+     * @throws \Tk\Db\Exception
      */
     public function setDb($db)
     {
@@ -543,11 +563,6 @@ SQL;
     {
         return \Tk\Config::getInstance();
     }
-
-
-
-
-
 
 
     /**
@@ -592,6 +607,7 @@ SQL;
      * @param string $zoneName
      * @param string $zoneId
      * @return bool
+     * @throws \Tk\Db\Exception
      */
     public function isZonePluginEnabled($pluginName, $zoneName, $zoneId)
     {
@@ -611,6 +627,7 @@ SQL;
      * @param string $zoneName
      * @param string $zoneId
      * @return $this
+     * @throws \Tk\Db\Exception
      */
     public function enableZonePlugin($pluginName, $zoneName, $zoneId)
     {
@@ -638,6 +655,7 @@ SQL;
      * @param string $zoneName
      * @param string $zoneId
      * @return $this
+     * @throws \Tk\Db\Exception
      */
     public function disableZonePlugin($pluginName, $zoneName, $zoneId)
     {
@@ -655,5 +673,7 @@ SQL;
         }
         return $this;
     }
+
+
 
 }
