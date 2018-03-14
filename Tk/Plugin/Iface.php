@@ -218,7 +218,7 @@ abstract class Iface
 
     /**
      * Get the plugin relative path
-     * EG: '/plugin/ems-plugin/'
+     * EG: '/plugin/plg-plugin/'
      *
      * @return string
      */
