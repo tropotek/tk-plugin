@@ -19,7 +19,7 @@
         }
     },
     "require": {
-        "php": ">=5.3.3"
+        "ttek/tk-framework": "~2.0"
     },
     "extra": {
         "branch-alias": {
