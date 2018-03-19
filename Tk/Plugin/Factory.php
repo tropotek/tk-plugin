@@ -52,8 +52,6 @@ class Factory
      * @var \Tk\Event\Dispatcher
      */
     protected $dispatcher = null;
-    
-    
 
 
     /**
@@ -62,6 +60,8 @@ class Factory
      * @param $db
      * @param $pluginPath
      * @param \Tk\Event\Dispatcher|null $dispatcher
+     * @throws Exception
+     * @throws \Tk\Db\Exception
      */
     protected function __construct($db, $pluginPath, $dispatcher = null)
     {
@@ -76,9 +76,11 @@ class Factory
      * Get an instance of this object
      *
      * @param $db
-     * @param $pluginPath
+     * @param string $pluginPath
      * @param \Tk\Event\Dispatcher|null $dispatcher
      * @return Factory
+     * @throws Exception
+     * @throws \Tk\Db\Exception
      */
     public static function getInstance($db, $pluginPath = '', $dispatcher = null)
     {
@@ -217,6 +219,7 @@ SQL;
      * @param string $pluginName
      * @return bool
      * @throws Exception
+     * @throws \Tk\Db\Exception
      */
     public function activatePlugin($pluginName)
     {
@@ -258,6 +261,7 @@ SQL;
      * @param string $pluginName
      * @return bool
      * @throws Exception
+     * @throws \Tk\Db\Exception
      */
     public function deactivatePlugin($pluginName)
     {
@@ -333,7 +337,9 @@ SQL;
      * Registration adds the plugin to the list of plugins, and also
      * includes it's code into our runtime.
      *
+     * @return array|Iface[]
      * @throws Exception
+     * @throws \Tk\Db\Exception
      */
     protected function initActivePlugins()
     {

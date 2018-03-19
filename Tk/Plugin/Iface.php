@@ -43,9 +43,9 @@ abstract class Iface
     protected $pluginFactory = null;
 
 
-
     /**
      * Iface constructor.
+     * @param $id
      * @param string $name
      */
     public function __construct($id, $name)
@@ -113,6 +113,7 @@ abstract class Iface
      * @param string $zoneName
      * @param string $zoneId
      * @return bool
+     * @throws \Tk\Db\Exception
      */
     public function isZonePluginEnabled($zoneName, $zoneId)
     {
@@ -128,6 +129,7 @@ abstract class Iface
      *       return \Tk\Uri::create('/lti/institutionSettings.html');
      *   }
      * </code>
+     * @param $zoneName
      * @return string|\Tk\Uri|null
      */
     public function getZoneSettingsUrl($zoneName)
@@ -136,9 +138,9 @@ abstract class Iface
     }
 
 
-
     /**
      * @return bool
+     * @throws \Tk\Db\Exception
      */
     public function isActive()
     {
@@ -221,6 +223,7 @@ abstract class Iface
      * EG: '/plugin/plg-plugin/'
      *
      * @return string
+     * @throws \ReflectionException
      */
     public function getPluginPath()
     {
