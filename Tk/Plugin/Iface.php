@@ -3,10 +3,8 @@ namespace Tk\Plugin;
 
 
 /**
- * Class Iface
- *
  * @author Michael Mifsud <info@tropotek.com>
- * @link http://www.tropotek.com/
+ * @see http://www.tropotek.com/
  * @license Copyright 2016 Michael Mifsud
  */
 abstract class Iface
@@ -16,7 +14,6 @@ abstract class Iface
      */
     const TYPE_SYSTEM = 'system';
 
-    
     /**
      * @var int
      */
@@ -44,7 +41,6 @@ abstract class Iface
 
 
     /**
-     * Iface constructor.
      * @param $id
      * @param string $name
      */
@@ -53,7 +49,6 @@ abstract class Iface
         $this->id = $id;
         $this->name = $name;
     }
-
 
     /**
      * Init the plugin
@@ -126,7 +121,7 @@ abstract class Iface
      *   // Some example code for zone setup urls
      *   switch ($zoneName) {
      *     case 'institution':
-     *       return \Tk\Uri::create('/lti/institutionSettings.html');
+     *       return Uri::create('/lti/institutionSettings.html');
      *   }
      * </code>
      * @param $zoneName
