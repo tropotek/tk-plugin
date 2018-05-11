@@ -399,7 +399,7 @@ SQL;
 
         // If all ok, check if the plugin needs to be upgraded.
         if (version_compare($plugin->getInfo()->version, $data->version, '>')) {
-            vd('Upgrade: ' . $data->version . ' => ' . $plugin->getInfo()->version);
+            //vd('Upgrade: ' . $data->version . ' => ' . $plugin->getInfo()->version);
             $plugin->doUpgrade($data->version, $plugin->getInfo()->version);
             $this->dbUpgrade($pluginName, $plugin->getInfo()->version);
         }
