@@ -98,6 +98,7 @@ class Factory
      * @param $pluginName
      * @param \Composer\Autoload\ClassLoader $composer
      * @return bool
+     * @throws \Tk\Exception
      */
     public static function isComposer($pluginName, $composer = null)
     {
@@ -145,7 +146,7 @@ class Factory
     protected function install()
     {
         
-        if (!$this->getDb()->tableExists($this->getTable())) {
+        if (!$this->getDb()->hasTable($this->getTable())) {
             $tbl = $this->getDb()->quoteParameter($this->getTable());
             $zoneTable = $this->getDb()->quoteParameter($this->getZoneTable());
 
