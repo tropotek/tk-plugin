@@ -222,7 +222,7 @@ abstract class Iface
      */
     public function getPluginPath()
     {
-        return dirname(str_replace($this->getConfig()->getSitePath(), '', \Tk\Object::classPath(get_class($this))));
+        return dirname(str_replace($this->getConfig()->getSitePath(), '', \Tk\ObjectUtil::classPath(get_class($this))));
     }
 
 }
