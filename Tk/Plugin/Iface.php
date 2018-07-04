@@ -206,6 +206,15 @@ abstract class Iface
     }
 
     /**
+     * @return \Tk\Db\Data
+     * @throws \Tk\Db\Exception
+     */
+    public function getData()
+    {
+        return \Tk\Db\Data::create($this->getName());
+    }
+
+    /**
      * @return \Tk\Config
      */
     public function getConfig()

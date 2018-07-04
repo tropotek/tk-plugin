@@ -283,16 +283,15 @@ SQL;
             $version = '0.0.0';
             if (!empty($plugin->getInfo()->version)) $version = $plugin->getInfo()->version;
 
-            try {
+//            try {
                 $plugin->doDeactivate();
-
                 $this->dbDeactivate($pluginName);
                 unset($this->activePlugins[$pluginName]);
-            } catch (\Exception $e) {
-                $this->dbActivate($pluginName, $version);
-                vd($e->__toString());
-                throw new Exception($e->getMessage(), $e->getCode(), $e);
-            }
+//            } catch (\Exception $e) {
+//                //$this->dbActivate($pluginName, $version);
+//                //vd($e->__toString());
+//                throw new Exception($e->getMessage(), $e->getCode(), $e);
+//            }
         }
         return true;
     }
