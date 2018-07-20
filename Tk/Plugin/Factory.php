@@ -60,16 +60,20 @@ class Factory
      * @param $db
      * @param $pluginPath
      * @param \Tk\Event\Dispatcher|null $dispatcher
-     * @throws Exception
-     * @throws \Tk\Db\Exception
      */
     protected function __construct($db, $pluginPath, $dispatcher = null)
     {
         $this->pluginPath = $pluginPath;
         $this->dispatcher = $dispatcher;
 
-        $this->setDb($db);
-        $this->initActivePlugins();
+        try {
+            $this->setDb($db);
+            $this->initActivePlugins();
+        } catch (\Tk\Db\Exception $e) {
+        } catch (Exception $e) {
+            \Tk\Alert::addError($e->getMessage());
+            \Tk\Log::warning($e->__toString());
+        }
     }
 
     /**
@@ -79,8 +83,6 @@ class Factory
      * @param string $pluginPath
      * @param \Tk\Event\Dispatcher|null $dispatcher
      * @return Factory
-     * @throws Exception
-     * @throws \Tk\Db\Exception
      */
     public static function getInstance($db, $pluginPath = '', $dispatcher = null)
     {
@@ -98,7 +100,6 @@ class Factory
      * @param $pluginName
      * @param \Composer\Autoload\ClassLoader $composer
      * @return bool
-     * @throws \Tk\Exception
      */
     public static function isComposer($pluginName, $composer = null)
     {
