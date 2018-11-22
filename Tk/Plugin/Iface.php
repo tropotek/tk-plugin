@@ -207,7 +207,6 @@ abstract class Iface
 
     /**
      * @return \Tk\Db\Data
-     * @throws \Tk\Db\Exception
      */
     public function getData()
     {
@@ -227,7 +226,6 @@ abstract class Iface
      * EG: '/plugin/plg-plugin/'
      *
      * @return string
-     * @throws \ReflectionException
      */
     public function getPluginPath()
     {
