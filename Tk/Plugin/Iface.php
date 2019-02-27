@@ -124,10 +124,11 @@ abstract class Iface
      *       return Uri::create('/lti/institutionSettings.html');
      *   }
      * </code>
-     * @param $zoneName
+     * @param string $zoneName
+     * @param string $zoneId
      * @return string|\Tk\Uri|null
      */
-    public function getZoneSettingsUrl($zoneName)
+    public function getZoneSettingsUrl($zoneName, $zoneId)
     {
         return null;
     }
