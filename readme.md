@@ -1,40 +1,32 @@
-ttek/plugin
-=========
+# tk-plugin 
 
-Authors:
+__Project:__ tk-plugin    
+__Web:__ <http://www.domtemplate.com/>  
+__Authors:__ Michael Mifsud <http://www.tropotek.com/>  
+  
+A Plugin lib to support the Tk lib.
 
-  - Michael Mifsud <http://www.tropotek.com/>
+## Contents
 
-Requirements
-------------
-
- - PHP5.3+ (GD, CURL)
- - Apache (modrewrite)
-
-
-Installation
-------------
-
-1. Clone the repository and include this project's files into your PHP
-   project/autoloader (PSR0 compatible).
-2. Add the package "ttek/{package}": "~2.0" to the composer.json file
-
-You should now be able to use the classes.
+- [Installation](#installation)
+- [Introduction](#introduction)
 
 
-Basic Usage
-------------
+## Installation
+
+Available on Packagist ([ttek/tk-plugin](http://packagist.org/packages/ttek/tk-plugin))
+and installable via [Composer](http://getcomposer.org/).
+
+```bash
+composer require ttek/tk-plugin
+```
+
+Or add the following to your composer.json file:
+
+```json
+"ttek/tk-plugin": "~3.0"
+```
 
 
-
-  <?php
-
-  // TODO: Example of using the code
-
-
-  ?>
-
-
-
-
+## Introduction
 
