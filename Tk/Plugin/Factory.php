@@ -208,7 +208,7 @@ SQL;
             if ($this->getDispatcher()) {
                 $event = new \Tk\Event\Event();
                 $event->set('plugin.factory', $this);
-                $this->getDispatcher()->dispatch($event, Events::INSTALL);
+                $this->getDispatcher()->dispatch(Events::INSTALL, $event);
             }
         }
         return $this;
@@ -237,7 +237,7 @@ SQL;
             $event = new \Tk\Event\Event();
             $event->set('pluginName', $pluginName);
             $event->set('info', $info);
-            $this->getDispatcher()->dispatch($event, Events::ACTIVATE);
+            $this->getDispatcher()->dispatch(Events::ACTIVATE, $event);
         }
 
         // Activate plugin by database entry
@@ -279,7 +279,7 @@ SQL;
             if ($this->dispatcher) {
                 $event = new \Tk\Event\Event();
                 $event->set('plugin', $plugin);
-                $this->dispatcher->dispatch($event, Events::DEACTIVATE);
+                $this->dispatcher->dispatch(Events::DEACTIVATE, $event);
             }
             $version = '0.0.0';
             if (!empty($plugin->getInfo()->version)) $version = $plugin->getInfo()->version;
