@@ -22,6 +22,9 @@ class Factory
      */
     public static $DB_TABLE = 'plugin';
 
+    // TODO: This should be made the default, we need to update child sites first
+    //public static $DB_TABLE = 'plugin';
+
     /**
      * @var Factory
      */
