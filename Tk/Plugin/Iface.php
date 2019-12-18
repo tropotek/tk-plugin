@@ -1,6 +1,7 @@
 <?php
 namespace Tk\Plugin;
 
+use Tk\ConfigTrait;
 
 /**
  * @author Michael Mifsud <info@tropotek.com>
@@ -9,6 +10,8 @@ namespace Tk\Plugin;
  */
 abstract class Iface
 {
+    use ConfigTrait;
+
     /**
      * Use the type to extend the plugin system
      */
@@ -212,14 +215,6 @@ abstract class Iface
     public function getData()
     {
         return \Tk\Db\Data::create($this->getName());
-    }
-
-    /**
-     * @return \Tk\Config|\App\Config
-     */
-    public function getConfig()
-    {
-        return \Tk\Config::getInstance();
     }
 
     /**

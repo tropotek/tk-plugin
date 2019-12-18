@@ -1,8 +1,7 @@
 <?php
 namespace Tk\Plugin;
 
-
-
+use Tk\ConfigTrait;
 
 /**
  * @author Michael Mifsud <info@tropotek.com>
@@ -11,6 +10,7 @@ namespace Tk\Plugin;
  */
 class Factory
 {
+    use ConfigTrait;
 
     /**
      * @var string
@@ -564,16 +564,6 @@ SQL;
         $this->install();
         return $this;
     }
-
-
-    /**
-     * @return \Tk\Config
-     */
-    public function getConfig()
-    {
-        return \Tk\Config::getInstance();
-    }
-
 
     /**
      * Get the table name for queries
