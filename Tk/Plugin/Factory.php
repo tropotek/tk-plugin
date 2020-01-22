@@ -496,8 +496,9 @@ SQL;
                 $info->version = file_get_contents($verFile);
             }
         }
-
-        vd($info);
+        if (!isset($info->version)) {
+            $info->version = '0.0.1';
+        }
         return $info;
     }
 
