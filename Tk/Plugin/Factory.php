@@ -496,7 +496,8 @@ SQL;
                 $info->version = file_get_contents($verFile);
             }
         }
-            vd($info);
+
+        vd($info);
         return $info;
     }
 
