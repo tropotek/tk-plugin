@@ -2,6 +2,7 @@
 namespace Tk\Plugin;
 
 use Tk\ConfigTrait;
+use Tk\EventDispatcher\EventDispatcher;
 
 /**
  * @author Michael Mifsud <info@tropotek.com>
@@ -52,7 +53,7 @@ class Factory
     protected $pluginPath = '';
 
     /**
-     * @var \Tk\Event\Dispatcher
+     * @var EventDispatcher
      */
     protected $dispatcher = null;
 
@@ -62,7 +63,7 @@ class Factory
      *
      * @param $db
      * @param $pluginPath
-     * @param \Tk\Event\Dispatcher|null $dispatcher
+     * @param EventDispatcher|null $dispatcher
      */
     protected function __construct($db, $pluginPath, $dispatcher = null)
     {
@@ -84,7 +85,7 @@ class Factory
      *
      * @param $db
      * @param string $pluginPath
-     * @param \Tk\Event\Dispatcher|null $dispatcher
+     * @param EventDispatcher|null $dispatcher
      * @return Factory
      */
     public static function getInstance($db, $pluginPath = '', $dispatcher = null)
@@ -136,7 +137,7 @@ class Factory
     }
 
     /**
-     * @return \Tk\Event\Dispatcher
+     * @return EventDispatcher
      */
     public function getDispatcher()
     {
@@ -476,19 +477,26 @@ SQL;
     {
         $pluginName = $this->cleanPluginName($pluginName);
         $file = $this->getPluginPath($pluginName) . '/composer.json';
-        if (is_readable($file))
-            return json_decode(file_get_contents($file));
-
-        // Info not found return a default info object
-        // TODO: should we get this onfo from another place controllable by the plugin, ie an ini file or static method???
-        $info = new \stdClass();
-        $info->name = 'ttek-plg/' . $pluginName;
-        $info->version = '0.0.1';
-        $info->time = \Tk\Date::create()->format(\Tk\Date::FORMAT_ISO_DATETIME);
-        if (is_dir(dirname($file))) {
-            $info->time = \Tk\Date::create(filectime(dirname($file)))->format(\Tk\Date::FORMAT_ISO_DATETIME);
+        if (is_readable($file)) {
+            $info = json_decode(file_get_contents($file));
+        } else {
+            // Info not found return a default info object
+            // TODO: should we get this onfo from another place controllable by the plugin, ie an ini file or static method???
+            $info = new \stdClass();
+            $info->name = 'ttek-plg/' . $pluginName;
+            $info->version = '0.0.1';
+            $info->time = \Tk\Date::create()->format(\Tk\Date::FORMAT_ISO_DATETIME);
+            if (is_dir(dirname($file))) {
+                $info->time = \Tk\Date::create(filectime(dirname($file)))->format(\Tk\Date::FORMAT_ISO_DATETIME);
+            }
         }
-
+        if (!isset($info->version)) {
+            $verFile = $this->getPluginPath($pluginName) . '/version.md';
+            if (is_readable($verFile)) {
+                $info->version = file_get_contents($verFile);
+            }
+        }
+            vd($info);
         return $info;
     }
 
