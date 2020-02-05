@@ -612,6 +612,26 @@ SQL;
     }
 
     /**
+     * Find all the enabled zone ids for a plugin
+     *
+     * @param string $pluginName
+     * @param string $zoneName
+     * @return array|\stdClass
+     * @throws \Exception
+     */
+    public function getPluginZoneIdList($pluginName, $zoneName)
+    {
+        $pluginName = $this->cleanPluginName($pluginName);
+        $zoneName = $this->cleanPluginName($zoneName);
+
+        $sql = sprintf('SELECT * FROM %s WHERE plugin_name = %s AND zone_name = %s',
+            $this->getDb()->quoteParameter($this->getZoneTable()),
+            $this->getDb()->quote($pluginName), $this->getDb()->quote($zoneName));
+        $res = $this->getDb()->query($sql);
+        return $res->fetchAll();
+    }
+
+    /**
      *
      * @param string $pluginName
      * @param string $zoneName
