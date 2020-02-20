@@ -24,7 +24,7 @@ composer require ttek/tk-plugin
 Or add the following to your composer.json file:
 
 ```json
-"ttek/tk-plugin": "~3.0"
+"ttek/tk-plugin": "~3.0.0"
 ```
 
 
