@@ -2,22 +2,25 @@
     "name": "ttek/tk-plugin",
     "type": "library",
     "description": "Manage and add plugin functionality to a site",
-    "keywords": ["tropotek", "plugin"],
-    "time": "2019-04-09",
+    "keywords":  [
+        "tropotek",
+        "plugin"
+    ],
+    "time": "2020-11-23",
     "license": "MIT",
-    "authors": [
-        {
+    "authors":  [
+         {
             "name": "Michael Mifsud",
             "email": "info@tropotek.com.au",
             "homepage": "http://www.tropotek.com/"
         }
     ],
-    "autoload": {
-        "psr-0": {
+    "autoload":  {
+        "psr-0":  {
             "Tk\\": ""
         }
     },
-    "require": {
+    "require":  {
         "ttek/tk-framework": "~3.0.0"
     }
 }
