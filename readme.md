@@ -41,7 +41,7 @@ See if you have any table without the underscore and rename them to the followin
 ```mysql
 -- NOTE: This has to be run manually before upgrading to ver 3.2
 RENAME TABLE migration TO _migration;
-RENAME TABLE data TO _data;
+RENAME TABLE _data TO _data;
 RENAME TABLE session TO _session;
 RENAME TABLE plugin TO _plugin;
 ```
