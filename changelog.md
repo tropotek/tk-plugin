@@ -1,5 +1,10 @@
 #CHANGELOG#
 
+Ver 3.2.10 [2022-03-03]:
+-------------------------------
+  - Merge branch '3.2' of github.com:fvas-elearning/tk-plugin into 3.2
+
+
 Ver 3.2.8 [2021-07-20]:
 -------------------------------
 
