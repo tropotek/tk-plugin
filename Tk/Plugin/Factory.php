@@ -480,7 +480,7 @@ SQL;
             // Info not found return a default info object
             // TODO: should we get this onfo from another place controllable by the plugin, ie an ini file or static method???
             $info = new \stdClass();
-            $info->name = 'ttek-plg/' . $pluginName;
+            $info->name = 'uom-plg/' . $pluginName;
             $info->version = '0.0.1';
             $info->time = \Tk\Date::create()->format(\Tk\Date::FORMAT_ISO_DATETIME);
             if (is_dir(dirname($file))) {
