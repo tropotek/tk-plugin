@@ -15,17 +15,17 @@ A Plugin lib to support the Tk lib.
 
 ## Installation
 
-Available on Packagist ([ttek/tk-plugin](http://packagist.org/packages/ttek/tk-plugin))
+Available on Packagist ([uom/tk-plugin](http://packagist.org/packages/uom/tk-plugin))
 and installable via [Composer](http://getcomposer.org/).
 
 ```bash
-composer require ttek/tk-plugin
+composer require uom/tk-plugin
 ```
 
 Or add the following to your composer.json file:
 
 ```json
-"ttek/tk-plugin": "~3.2.0"
+"uom/tk-plugin": "~3.2.0"
 ```
 
 
