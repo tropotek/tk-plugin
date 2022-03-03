@@ -25,7 +25,7 @@ composer require uom/tk-plugin
 Or add the following to your composer.json file:
 
 ```json
-"uom/tk-plugin": "~3.2.0"
+"uom/tk-plugin": "~3.4"
 ```
 
 
