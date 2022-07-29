@@ -251,7 +251,7 @@ SQL;
                 $this->activePlugins[$pluginName] = $plugin;
             } catch (\Exception $e) {
                 $this->dbDeactivate($pluginName);
-                vd($e->__toString());
+                \Tk\Log::debug($e->__toString());
                 throw new Exception($e->getMessage(), $e->getCode(), $e);
             }
         }
@@ -285,15 +285,9 @@ SQL;
             $version = '0.0.0';
             if (!empty($plugin->getInfo()->version)) $version = $plugin->getInfo()->version;
 
-//            try {
-                $plugin->doDeactivate();
-                $this->dbDeactivate($pluginName);
-                unset($this->activePlugins[$pluginName]);
-//            } catch (\Exception $e) {
-//                //$this->dbActivate($pluginName, $version);
-//                //vd($e->__toString());
-//                throw new Exception($e->getMessage(), $e->getCode(), $e);
-//            }
+            $plugin->doDeactivate();
+            $this->dbDeactivate($pluginName);
+            unset($this->activePlugins[$pluginName]);
         }
         return true;
     }
@@ -401,7 +395,6 @@ SQL;
 
         // If all ok, check if the plugin needs to be upgraded.
         if (version_compare($plugin->getInfo()->version, $data->version, '>')) {
-            //vd('Upgrade: ' . $data->version . ' => ' . $plugin->getInfo()->version);
             $plugin->doUpgrade($data->version, $plugin->getInfo()->version);
             $this->dbUpgrade($pluginName, $plugin->getInfo()->version);
         }
