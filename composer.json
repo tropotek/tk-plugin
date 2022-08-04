@@ -1,7 +1,7 @@
 {
-  "name": "uom/tk-plugin",
+  "name": "ttek/tk-plugin",
   "type": "library",
-  "description": "Manage and add plugin functionality to a site",
+  "description": "Manage and add plugin functionality to a TK framework site",
   "keywords": [
     "tropotek",
     "plugin"
@@ -20,7 +20,7 @@
     }
   },
   "require": {
-    "uom/tk-framework": "~3.2.0"
+    "ttek/tk-framework": "~3.2.0"
   },
   "extra": {
     "branch-alias": {
